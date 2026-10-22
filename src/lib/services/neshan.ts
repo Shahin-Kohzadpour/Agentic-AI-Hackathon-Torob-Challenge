@@ -1,6 +1,7 @@
 /**
  * Official Neshan (نشان) Platform Services.
- * Provides live traffic routing, distance matrix, and ETA calculations for Tehran stores.
+ * Fully integrates Neshan Routing, Distance Matrix, Reverse Geocoding (Traffic Zones),
+ * and Pedestrian Navigation APIs.
  */
 
 const NESHAN_SERVICE_KEY = process.env.NESHAN_SERVICE_KEY || "service.NESHAN_SERVICE_KEY_REMOVED";
@@ -12,41 +13,38 @@ export interface LiveRouteResult {
   eta_formatted: string;
 }
 
-// In-memory cache for live routing calls to optimize performance and rate limits
-const routeCache = new Map<string, { data: LiveRouteResult; expiry: number }>();
+export interface StoreLocationContext {
+  neighbourhood: string;
+  municipality_zone: string;
+  formatted_address: string;
+  in_traffic_zone: boolean; // داخل طرح ترافیک تهران
+  in_odd_even_zone: boolean; // داخل طرح کنترل آلودگی هوا
+}
 
+export interface PedestrianRouteResult {
+  walking_distance_meters: number;
+  walking_duration_minutes: number;
+  formatted: string;
+}
+
+// 1. Live Car Routing with Traffic
 export async function getLiveTrafficRoute(
   originLat: number,
   originLon: number,
   destLat: number,
   destLon: number
 ): Promise<LiveRouteResult | null> {
-  const cacheKey = `${originLat.toFixed(4)},${originLon.toFixed(4)}->${destLat.toFixed(4)},${destLon.toFixed(4)}`;
-  const now = Date.now();
-
-  const cached = routeCache.get(cacheKey);
-  if (cached && cached.expiry > now) {
-    return cached.data;
-  }
-
   try {
     const url = `https://api.neshan.org/v4/direction?type=car&origin=${originLat},${originLon}&destination=${destLat},${destLon}`;
     const resp = await fetch(url, {
-      headers: {
-        "Api-Key": NESHAN_SERVICE_KEY,
-      },
-      next: { revalidate: 300 }, // Cache 5 min
+      headers: { "Api-Key": NESHAN_SERVICE_KEY },
+      next: { revalidate: 300 },
     });
 
-    if (!resp.ok) {
-      console.warn("Neshan Direction API failed with status:", resp.status);
-      return null;
-    }
+    if (!resp.ok) return null;
 
     const data = await resp.json();
-    if (!data.routes || data.routes.length === 0) {
-      return null;
-    }
+    if (!data.routes || data.routes.length === 0) return null;
 
     const leg = data.routes[0].legs[0];
     const distMeters = leg?.distance?.value || 0;
@@ -56,17 +54,129 @@ export async function getLiveTrafficRoute(
     const distKm = Math.round((distMeters / 1000) * 10) / 10;
     const durMin = Math.max(1, Math.round(durSeconds / 60));
 
-    const result: LiveRouteResult = {
+    return {
       distance_km: distKm,
       duration_minutes: durMin,
       traffic_summary: summary,
-      eta_formatted: `${durMin} دقیقه با ترافیک زنده (${distKm} کیلومتر رانندگی)`,
+      eta_formatted: `${durMin} دقیقه با ترافیک زنده (${distKm} کیلومتر)`,
     };
-
-    routeCache.set(cacheKey, { data: result, expiry: now + 300000 });
-    return result;
   } catch (error) {
     console.error("Neshan routing error:", error);
     return null;
   }
 }
+
+// 2. Pedestrian Walking Route (مسیریابی پیاده نشان)
+export async function getPedestrianRoute(
+  originLat: number,
+  originLon: number,
+  destLat: number,
+  destLon: number
+): Promise<PedestrianRouteResult | null> {
+  try {
+    const url = `https://api.neshan.org/v4/direction?type=pedestrian&origin=${originLat},${originLon}&destination=${destLat},${destLon}`;
+    const resp = await fetch(url, {
+      headers: { "Api-Key": NESHAN_SERVICE_KEY },
+      next: { revalidate: 600 },
+    });
+
+    if (!resp.ok) return null;
+
+    const data = await resp.json();
+    if (!data.routes || data.routes.length === 0) return null;
+
+    const leg = data.routes[0].legs[0];
+    const distMeters = leg?.distance?.value || 0;
+    const durSeconds = leg?.duration?.value || 0;
+    const durMin = Math.max(1, Math.round(durSeconds / 60));
+
+    return {
+      walking_distance_meters: distMeters,
+      walking_duration_minutes: durMin,
+      formatted: `${durMin} دقیقه پیاده‌روی (${distMeters} متر)`,
+    };
+  } catch (error) {
+    console.error("Neshan pedestrian routing error:", error);
+    return null;
+  }
+}
+
+// 3. Batch Distance Matrix API (ماتریس فاصله برای چند فروشگاه در یک درخواست)
+export async function getBatchDistanceMatrix(
+  originLat: number,
+  originLon: number,
+  destinations: Array<{ lat: number; lon: number }>
+): Promise<Array<{ distance_km: number; duration_minutes: number } | null>> {
+  if (destinations.length === 0) return [];
+
+  const destStr = destinations.map((d) => `${d.lat},${d.lon}`).join("|");
+  const url = `https://api.neshan.org/v1/distance-matrix?origins=${originLat},${originLon}&destinations=${destStr}&type=car`;
+
+  try {
+    const resp = await fetch(url, {
+      headers: { "Api-Key": NESHAN_SERVICE_KEY },
+      next: { revalidate: 300 },
+    });
+
+    if (!resp.ok) return destinations.map(() => null);
+
+    const data = await resp.json();
+    const elements = data?.rows?.[0]?.elements;
+    if (!elements || !Array.isArray(elements)) return destinations.map(() => null);
+
+    return elements.map((el) => {
+      if (el.status !== "Ok") return null;
+      const meters = el.distance?.value || 0;
+      const seconds = el.duration?.value || 0;
+      return {
+        distance_km: Math.round((meters / 1000) * 10) / 10,
+        duration_minutes: Math.max(1, Math.round(seconds / 60)),
+      };
+    });
+  } catch (error) {
+    console.error("Neshan distance matrix error:", error);
+    return destinations.map(() => null);
+  }
+}
+
+// 4. Reverse Geocoding & Traffic Zone Detection (بررسی طرح ترافیک و منطقه شهرداری تهران)
+export async function getStoreLocationContext(
+  lat: number,
+  lon: number
+): Promise<StoreLocationContext | null> {
+  try {
+    const url = `https://api.neshan.org/v5/reverse?lat=${lat}&lng=${lon}`;
+    const resp = await fetch(url, {
+      headers: { "Api-Key": NESHAN_SERVICE_KEY },
+      next: { revalidate: 86400 },
+    });
+
+    if (!resp.ok) return null;
+
+    const data = await resp.json();
+    if (data.status !== "OK") return null;
+
+    return {
+      neighbourhood: data.neighbourhood || "تهران",
+      municipality_zone: String(data.municipality_zone || ""),
+      formatted_address: data.formatted_address || "",
+      in_traffic_zone: Boolean(data.in_traffic_zone),
+      in_odd_even_zone: Boolean(data.in_odd_even_zone),
+    };
+  } catch (error) {
+    console.error("Neshan reverse geocoding error:", error);
+    return null;
+  }
+}
+
+// 5. Static Map URL Generator (تولید تصویر نقشه استاتیک با پین فروشگاه)
+export function getStaticMapUrl(
+  lat: number,
+  lon: number,
+  zoom: number = 15,
+  width: number = 480,
+  height: number = 200
+): string {
+  return `https://api.neshan.org/v5/static?key=${NESHAN_SERVICE_KEY}&style=light&width=${width}&height=${height}&zoom=${zoom}&latitude=${lat}&longitude=${lon}&marker=red`;
+}
+

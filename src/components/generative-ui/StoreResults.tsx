@@ -171,6 +171,11 @@ export default function StoreResults({ data, onStartSellerCheck, onFilterChange 
                           ترب‌پی حضوری
                         </span>
                       )}
+                      {offer.traffic_zone?.in_traffic_zone && (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                          ⚠️ طرح ترافیک
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 text-[11px] text-neutral-500 flex-wrap">

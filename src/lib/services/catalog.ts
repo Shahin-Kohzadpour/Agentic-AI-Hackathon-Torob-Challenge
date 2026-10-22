@@ -1,7 +1,7 @@
 import { getDatabase } from "../db";
 import { normalizePersian } from "../normalize";
 import { calculateDistanceKm, extractAddressFloorUnit } from "../geo";
-import { getLiveTrafficRoute } from "./neshan";
+import { getLiveTrafficRoute, getBatchDistanceMatrix, getStoreLocationContext } from "./neshan";
 import { Product, EligibleOfferResult } from "@/types/dataset";
 
 interface RawProductRow {
@@ -255,23 +255,63 @@ export async function attachLiveTrafficToOffers(
   userLat: number = 35.6948,
   userLon: number = 51.4089
 ): Promise<EligibleOfferResult[]> {
-  for (let i = 0; i < Math.min(offers.length, 3); i++) {
-    const o = offers[i];
-    if (o.lat && o.lon) {
+  const topOffers = offers.slice(0, 5);
+  const validDests = topOffers
+    .map((o, idx) => ({ idx, lat: o.lat, lon: o.lon }))
+    .filter((d): d is { idx: number; lat: number; lon: number } => Boolean(d.lat && d.lon));
+
+  if (validDests.length > 0) {
+    try {
+      // 1. Batch Distance Matrix for fast multi-destination ETAs
+      const matrixResults = await getBatchDistanceMatrix(
+        userLat,
+        userLon,
+        validDests.map((d) => ({ lat: d.lat, lon: d.lon }))
+      );
+
+      matrixResults.forEach((res, mIdx) => {
+        if (res) {
+          const offer = topOffers[validDests[mIdx].idx];
+          offer.live_eta = {
+            driving_distance_km: res.distance_km,
+            duration_minutes: res.duration_minutes,
+            traffic_summary: "محور شهری",
+            eta_formatted: `${res.duration_minutes} دقیقه با ترافیک (${res.distance_km} کیلومتر)`,
+          };
+        }
+      });
+    } catch (e) {
+      console.warn("Failed batch distance matrix:", e);
+    }
+
+    // 2. Fetch full routing summary & Tehran traffic zone for the top store
+    const top = topOffers[0];
+    if (top && top.lat && top.lon) {
       try {
-        const route = await getLiveTrafficRoute(userLat, userLon, o.lat, o.lon);
+        const [route, locContext] = await Promise.all([
+          getLiveTrafficRoute(userLat, userLon, top.lat, top.lon),
+          getStoreLocationContext(top.lat, top.lon),
+        ]);
         if (route) {
-          o.live_eta = {
+          top.live_eta = {
             driving_distance_km: route.distance_km,
             duration_minutes: route.duration_minutes,
             traffic_summary: route.traffic_summary,
             eta_formatted: route.eta_formatted,
           };
         }
+        if (locContext) {
+          top.traffic_zone = {
+            in_traffic_zone: locContext.in_traffic_zone,
+            in_odd_even_zone: locContext.in_odd_even_zone,
+            neighbourhood: locContext.neighbourhood,
+          };
+        }
       } catch (e) {
-        console.warn("Failed to get Neshan traffic route:", e);
+        console.warn("Failed top store Neshan context:", e);
       }
     }
   }
+
   return offers;
 }

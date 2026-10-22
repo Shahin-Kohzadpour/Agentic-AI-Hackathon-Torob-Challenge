@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchProducts, findEligibleOffers } from "@/lib/services/catalog";
+import { searchProducts, findEligibleOffers, attachLiveTrafficToOffers } from "@/lib/services/catalog";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -13,8 +13,11 @@ export async function GET(req: NextRequest) {
     const maxBudget = searchParams.get("maxBudget") ? Number(searchParams.get("maxBudget")) : null;
     const torobPayOnly = searchParams.get("torobPayOnly") === "true";
     const maxDistanceKm = searchParams.get("maxDistanceKm") ? Number(searchParams.get("maxDistanceKm")) : null;
+    const lat = searchParams.get("lat") ? Number(searchParams.get("lat")) : 35.6948;
+    const lon = searchParams.get("lon") ? Number(searchParams.get("lon")) : 51.4089;
 
-    const offers = findEligibleOffers(productId, 35.6948, 51.4089, maxDistanceKm, maxBudget, torobPayOnly);
+    let offers = findEligibleOffers(productId, lat, lon, maxDistanceKm, maxBudget, torobPayOnly);
+    offers = await attachLiveTrafficToOffers(offers, lat, lon);
     return NextResponse.json({ offers });
   }
 

@@ -66,4 +66,15 @@ export interface EligibleOfferResult {
     traffic_summary: string;
     eta_formatted: string;
   };
+  traffic_zone?: {
+    in_traffic_zone: boolean;
+    in_odd_even_zone: boolean;
+    neighbourhood?: string;
+  };
+  pedestrian_eta?: {
+    walking_distance_meters: number;
+    walking_duration_minutes: number;
+    formatted: string;
+  };
+  static_map_url?: string;
 }

@@ -64,6 +64,8 @@ export interface VisitPlanProps {
     lat: number | null;
     lon: number | null;
     distance_km: number | null;
+    in_traffic_zone?: boolean;
+    municipality_zone?: string;
   };
   confirmed_price_toman: number;
   warranty: string | null;
@@ -75,6 +77,11 @@ export interface VisitPlanProps {
     driving_distance_km: number;
     traffic_summary: string;
     eta_formatted: string;
+  };
+  pedestrian_eta?: {
+    walking_duration_minutes: number;
+    walking_distance_meters: number;
+    formatted: string;
   };
   backup_shop?: {
     shop_name: string;

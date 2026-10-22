@@ -4,7 +4,7 @@ import { TOROB_AGENT_SYSTEM_PROMPT } from "./prompts";
 import { searchProducts, findEligibleOffers, getProductDetails, attachLiveTrafficToOffers } from "../services/catalog";
 import { startSellerCheckJob } from "../services/seller-simulator";
 import { findHubsForCategory, extractAddressFloorUnit } from "../geo";
-import { getLiveTrafficRoute } from "../services/neshan";
+import { getLiveTrafficRoute, getPedestrianRoute, getStoreLocationContext } from "../services/neshan";
 import { getDatabase } from "../db";
 import { UIComponentPayload } from "@/types/generative-ui";
 
@@ -210,16 +210,41 @@ export async function runShoppingAgent(
           const shopRow = db.prepare("SELECT * FROM shops WHERE shop_id = ?").get(shopId) as Record<string, unknown> | undefined;
 
           let liveEta = undefined;
-          if (shopRow && shopRow.lat && shopRow.lon) {
-            const r = await getLiveTrafficRoute(userLocation.lat, userLocation.lon, Number(shopRow.lat), Number(shopRow.lon));
-            if (r) {
+          let pedestrianEta = undefined;
+          let inTrafficZone = false;
+          let municipalityZone = "";
+
+          const shopLat = shopRow && shopRow.lat ? Number(shopRow.lat) : 35.6974;
+          const shopLon = shopRow && shopRow.lon ? Number(shopRow.lon) : 51.4116;
+
+          try {
+            const [carRoute, pedRoute, locCtx] = await Promise.all([
+              getLiveTrafficRoute(userLocation.lat, userLocation.lon, shopLat, shopLon),
+              getPedestrianRoute(userLocation.lat, userLocation.lon, shopLat, shopLon),
+              getStoreLocationContext(shopLat, shopLon),
+            ]);
+
+            if (carRoute) {
               liveEta = {
-                duration_minutes: r.duration_minutes,
-                driving_distance_km: r.distance_km,
-                traffic_summary: r.traffic_summary,
-                eta_formatted: r.eta_formatted,
+                duration_minutes: carRoute.duration_minutes,
+                driving_distance_km: carRoute.distance_km,
+                traffic_summary: carRoute.traffic_summary,
+                eta_formatted: carRoute.eta_formatted,
               };
             }
+            if (pedRoute) {
+              pedestrianEta = {
+                walking_duration_minutes: pedRoute.walking_duration_minutes,
+                walking_distance_meters: pedRoute.walking_distance_meters,
+                formatted: pedRoute.formatted,
+              };
+            }
+            if (locCtx) {
+              inTrafficZone = locCtx.in_traffic_zone;
+              municipalityZone = locCtx.municipality_zone;
+            }
+          } catch (e) {
+            console.warn("Failed fetching Neshan routing context:", e);
           }
 
           activeUIComponent = {
@@ -232,9 +257,11 @@ export async function runShoppingAgent(
                 location_label: shopRow && shopRow.location_label ? String(shopRow.location_label) : "تهران",
                 address: shopRow && shopRow.address ? String(shopRow.address) : "تهران، خیابان جمهوری",
                 floor_unit: shopRow ? extractAddressFloorUnit(String(shopRow.address || "")) : null,
-                lat: shopRow && shopRow.lat ? Number(shopRow.lat) : 35.6948,
-                lon: shopRow && shopRow.lon ? Number(shopRow.lon) : 51.4089,
+                lat: shopLat,
+                lon: shopLon,
                 distance_km: liveEta ? liveEta.driving_distance_km : 1.2,
+                in_traffic_zone: inTrafficZone,
+                municipality_zone: municipalityZone,
               },
               confirmed_price_toman: price,
               warranty,
@@ -242,6 +269,7 @@ export async function runShoppingAgent(
               payment_method: "ترب‌پی حضوری (خرید اقساطی اعتباری)",
               verification_badge: "SIMULATED_VERIFIED",
               live_eta: liveEta,
+              pedestrian_eta: pedestrianEta,
               backup_shop: backupName
                 ? {
                     shop_name: backupName,
