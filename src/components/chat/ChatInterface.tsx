@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, RotateCcw, SlidersHorizontal } from "lucide-react";
 import VoiceInput from "./VoiceInput";
 import ImageInput from "./ImageInput";
+import NeedClarification from "../generative-ui/NeedClarification";
 import ProductComparison from "../generative-ui/ProductComparison";
 import StoreResults from "../generative-ui/StoreResults";
 import SellerCheckProgress from "../generative-ui/SellerCheckProgress";
@@ -281,6 +282,13 @@ export default function ChatInterface() {
             {/* Generative UI Components */}
             {msg.uiComponent && (
               <div className="w-full">
+                {msg.uiComponent.type === "NeedClarification" && (
+                  <NeedClarification
+                    data={msg.uiComponent.props}
+                    onSelectOption={(opt) => sendMessage(opt)}
+                  />
+                )}
+
                 {msg.uiComponent.type === "ProductComparison" && (
                   <ProductComparison
                     data={msg.uiComponent.props}

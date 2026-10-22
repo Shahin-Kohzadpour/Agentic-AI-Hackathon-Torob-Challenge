@@ -115,7 +115,17 @@ export async function runShoppingAgent(
         const args = call.args;
         let outputData: unknown = null;
 
-        if (name === "search_products") {
+        if (name === "ask_clarification") {
+          const question = String(args.question || "اولویت اصلی شما کدام است؟");
+          const options = Array.isArray(args.options) ? args.options.map(String) : ["مکالمه و رفت‌وآمد", "کیفیت صدا و بیس", "شارژدهی طولانی"];
+          const field = (args.field as any) || "use_case";
+
+          activeUIComponent = {
+            type: "NeedClarification",
+            props: { question, options, field },
+          };
+          outputData = { status: "presented", question, options };
+        } else if (name === "search_products") {
           const query = String(args.query || args.search_term || "هندزفری");
           const cat = args.category ? String(args.category) : undefined;
           const budget = args.max_budget || args.max_price ? Number(args.max_budget || args.max_price) : undefined;

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import { StoreResultsProps } from "@/types/generative-ui";
 import { formatToman } from "@/lib/normalize";
-import { MapPin, Map, List, Check, ArrowRight } from "lucide-react";
+import { MapPin, Map, List, Check, ArrowUpDown } from "lucide-react";
 
 const StoreMap = dynamic(() => import("../map/StoreMap"), { ssr: false });
 
@@ -22,13 +22,24 @@ interface Props {
 
 export default function StoreResults({ data, onStartSellerCheck, onFilterChange }: Props) {
   const [torobPayOnly, setTorobPayOnly] = useState(data.filters.torob_pay_only || false);
+  const [sortBy, setSortBy] = useState<"price" | "distance">("price");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
 
-  const filteredOffers = data.offers.filter((o) => {
+  // Filter & Sort offers locally for instant Generative UI responsiveness
+  let filteredOffers = data.offers.filter((o) => {
     if (torobPayOnly && !o.has_torob_pay_in_person) return false;
     if (data.filters.max_budget && o.price_toman > data.filters.max_budget) return false;
     return true;
+  });
+
+  filteredOffers.sort((a, b) => {
+    if (sortBy === "distance") {
+      const da = a.distance_km ?? 999;
+      const db = b.distance_km ?? 999;
+      return da - db;
+    }
+    return a.price_toman - b.price_toman;
   });
 
   const handleTorobPayToggle = () => {
@@ -85,8 +96,8 @@ export default function StoreResults({ data, onStartSellerCheck, onFilterChange 
         </div>
       </div>
 
-      {/* Filter Chips Bar */}
-      <div className="flex items-center gap-2 mb-3">
+      {/* Filter & Sort Chips Bar (Generative UI Controls) */}
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <button
           onClick={handleTorobPayToggle}
           className={`text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
@@ -98,6 +109,24 @@ export default function StoreResults({ data, onStartSellerCheck, onFilterChange 
           {torobPayOnly && <Check className="w-3 h-3 text-torob-red" />}
           <span>فقط خرید قسطی (ترب‌پی)</span>
         </button>
+
+        {/* Live Sort Switcher */}
+        <div className="flex items-center gap-1 text-[10px] text-neutral-500">
+          <ArrowUpDown className="w-3 h-3 text-neutral-400" />
+          <button
+            onClick={() => setSortBy("price")}
+            className={`px-1.5 py-0.5 rounded ${sortBy === "price" ? "font-bold text-neutral-900 bg-neutral-100" : "hover:text-neutral-700"}`}
+          >
+            ارزان‌ترین
+          </button>
+          <span>|</span>
+          <button
+            onClick={() => setSortBy("distance")}
+            className={`px-1.5 py-0.5 rounded ${sortBy === "distance" ? "font-bold text-neutral-900 bg-neutral-100" : "hover:text-neutral-700"}`}
+          >
+            نزدیک‌ترین
+          </button>
+        </div>
       </div>
 
       {/* Content: Map or List */}

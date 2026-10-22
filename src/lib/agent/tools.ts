@@ -4,6 +4,33 @@ export const AGENT_TOOLS: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "ask_clarification",
+      description: "ارائه گزینه‌های تعاملی و چندگزینه‌ای (Generative UI NeedClarification) برای شفاف‌سازی نیاز یا اولویت کاربر بدون نیاز به تایپ دستی",
+      parameters: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "متن سؤال کوتاه و شفاف",
+          },
+          options: {
+            type: "array",
+            items: { type: "string" },
+            description: "لیست گزینه‌های قابل لمس (مثلا ۲ تا ۴ گزینه)",
+          },
+          field: {
+            type: "string",
+            enum: ["use_case", "budget", "feature", "brand"],
+            description: "زمینه سؤال",
+          },
+        },
+        required: ["question", "options", "field"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "search_products",
       description: "جستجوی محصولات در کاتالوگ جامع ترب و بازگرداندن ۳ مدل برتر همراه با مشخصات و قیمت پایه برای مقایسه",
       parameters: {

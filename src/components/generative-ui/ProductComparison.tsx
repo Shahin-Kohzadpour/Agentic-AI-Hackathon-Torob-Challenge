@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ProductComparisonProps } from "@/types/generative-ui";
 import { formatToman } from "@/lib/normalize";
-import { Store, ChevronLeft, Check } from "lucide-react";
+import { Store, ChevronDown, Check } from "lucide-react";
 
 interface Props {
   data: ProductComparisonProps;
@@ -12,6 +12,7 @@ interface Props {
 
 export default function ProductComparison({ data, onSelectProduct }: Props) {
   const [selectedId, setSelectedId] = useState<string>(data.products[0]?.product_id || "");
+  const [showSpecMatrix, setShowSpecMatrix] = useState(false);
 
   return (
     <div className="w-full my-3 bg-neutral-50/80 rounded-2xl p-3 border border-neutral-200/80">
@@ -19,9 +20,13 @@ export default function ProductComparison({ data, onSelectProduct }: Props) {
         <h3 className="text-xs font-bold text-neutral-800">
           مقایسه ۳ مدل پیشنهادی
         </h3>
-        <span className="text-[11px] text-neutral-500 font-medium">
-          برای ادامه یک مدل را انتخاب کنید
-        </span>
+        <button
+          onClick={() => setShowSpecMatrix(!showSpecMatrix)}
+          className="text-[11px] text-torob-red hover:underline font-bold flex items-center gap-0.5"
+        >
+          <span>{showSpecMatrix ? "بستن جدول مشخصات" : "جدول مشخصات"}</span>
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSpecMatrix ? "rotate-180" : ""}`} />
+        </button>
       </div>
 
       {/* Horizontal Carousel for Mobile */}
@@ -111,6 +116,32 @@ export default function ProductComparison({ data, onSelectProduct }: Props) {
           );
         })}
       </div>
+
+      {/* Interactive Generative UI Spec Matrix */}
+      {showSpecMatrix && (
+        <div className="mt-3 pt-3 border-t border-neutral-200 overflow-x-auto text-[11px] animate-in fade-in">
+          <table className="w-full text-right border-collapse">
+            <thead>
+              <tr className="border-b border-neutral-200 text-neutral-400">
+                <th className="py-1 px-1.5 font-medium">مدل</th>
+                <th className="py-1 px-1.5 font-medium">قیمت پایه</th>
+                <th className="py-1 px-1.5 font-medium">فروشنده</th>
+                <th className="py-1 px-1.5 font-medium">مزیت اصلی</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {data.products.map((p) => (
+                <tr key={p.product_id} className="text-neutral-700">
+                  <td className="py-1.5 px-1.5 font-bold line-clamp-1 max-w-[120px]">{p.persian_title}</td>
+                  <td className="py-1.5 px-1.5 font-black text-torob-red whitespace-nowrap">{formatToman(p.min_price_toman)}</td>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">{p.distinct_sellers} فروشگاه</td>
+                  <td className="py-1.5 px-1.5 text-neutral-500">{p.tradeoff_summary.slice(0, 35)}...</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
