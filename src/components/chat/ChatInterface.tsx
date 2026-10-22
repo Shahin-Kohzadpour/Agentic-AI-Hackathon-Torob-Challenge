@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, RefreshCw, Compass, ArrowRight, Store, ShieldAlert } from "lucide-react";
+import { Send, RotateCcw, SlidersHorizontal } from "lucide-react";
 import VoiceInput from "./VoiceInput";
 import ImageInput from "./ImageInput";
 import ProductComparison from "../generative-ui/ProductComparison";
@@ -25,7 +25,7 @@ export default function ChatInterface() {
       id: "m_welcome",
       role: "assistant",
       content:
-        "سلام! من دستیار هوشمند خرید حضوری ترب هستم. چطور می‌توانم در انتخاب مدل و پیدا کردن مطمئن‌ترین فروشگاه در تهران به شما کمک کنم؟",
+        "سلام! برای شروع خرید حضوری در تهران، نوع کالای مورد نظرتان را بفرمایید یا یکی از دو مسیر زیر را انتخاب کنید:",
     },
   ]);
   const [input, setInput] = useState("");
@@ -71,7 +71,7 @@ export default function ChatInterface() {
       const assistantMsg: Message = {
         id: `assistant_${Date.now()}`,
         role: "assistant",
-        content: data.textResponse || "اطلاعات با موفقیت پردازش شد.",
+        content: data.textResponse || "اطلاعات با موفقیت آماده شد.",
         uiComponent: data.uiComponent,
       };
 
@@ -83,7 +83,7 @@ export default function ChatInterface() {
         {
           id: `err_${Date.now()}`,
           role: "assistant",
-          content: "خطایی در پردازش رخ داد، لطفاً دوباره تلاش فرمایید.",
+          content: "خطایی در پردازش رخ داد، لطفاً دوباره امتحان کنید.",
         },
       ]);
     } finally {
@@ -91,12 +91,10 @@ export default function ChatInterface() {
     }
   };
 
-  // Handler when user selects a product from the comparison card
   const handleSelectProduct = async (productId: string, productTitle: string) => {
-    await sendMessage(`محصول «${productTitle}» را انتخاب کردم. لطفاً فروشگاه‌های حضوری موجود در تهران با شرط ترب‌پی حضوری (قسطی) را نمایش بده.`);
+    await sendMessage(`مدل «${productTitle}» را انتخاب کردم. فروشگاه‌های حضوری دارای ترب‌پی در تهران را نمایش بده.`);
   };
 
-  // Handler when user starts checking a store
   const handleStartSellerCheck = async (
     offerId: string,
     shopName: string,
@@ -124,7 +122,7 @@ export default function ChatInterface() {
         role: "assistant",
         content: isBackup
           ? `استعلام از فروشگاه جایگزین (${shopName}) آغاز شد.`
-          : `استعلام شبیه‌سازی‌شده وضعیت موجودی و ساعت کاری از فروشگاه «${shopName}» در حال انجام است.`,
+          : `استعلام شبیه‌سازی‌شده وضعیت موجودی از فروشگاه «${shopName}» در حال انجام است:`,
         uiComponent: {
           type: "SellerCheckProgress",
           props: job,
@@ -138,7 +136,6 @@ export default function ChatInterface() {
     }
   };
 
-  // Handler for smart recovery to backup shop (آوان آران)
   const handleSelectBackupStore = () => {
     handleStartSellerCheck(
       "offer_3c1ad9b2b3081b07991d5872",
@@ -149,12 +146,11 @@ export default function ChatInterface() {
     );
   };
 
-  // Handler for generating final visit card
   const handleGenerateVisitPlan = () => {
     const visitMsg: Message = {
       id: `visit_${Date.now()}`,
       role: "assistant",
-      content: "کارت نهایی مراجعه حضوری با موفقیت صادر شد. قبل از حرکت، جزئیات آدرس، واحد در پاساژ و ساعت کاری را بررسی کنید:",
+      content: "کارت نهایی مراجعه حضوری صادر شد. قبل از حرکت، جزئیات آدرس و ساعت کاری را بررسی فرمایید:",
       uiComponent: {
         type: "VisitPlan",
         props: {
@@ -191,112 +187,98 @@ export default function ChatInterface() {
         id: "m_welcome",
         role: "assistant",
         content:
-          "سلام! من دستیار هوشمند خرید حضوری ترب هستم. چطور می‌توانم در انتخاب مدل و پیدا کردن مطمئن‌ترین فروشگاه در تهران به شما کمک کنم؟",
+          "سلام! برای شروع خرید حضوری در تهران، نوع کالای مورد نظرتان را بفرمایید یا یکی از دو مسیر زیر را انتخاب کنید:",
       },
     ]);
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto bg-gray-50/50">
-      {/* Top Header */}
-      <header className="bg-white/95 backdrop-blur sticky top-0 z-30 border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-torob-red flex items-center justify-center text-white font-black text-lg shadow-sm">
-            ت
+    <div className="mobile-viewport">
+      {/* Native App Style Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-neutral-200/80 px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-torob-red flex items-center justify-center text-white font-extrabold text-sm shadow-xs">
+            ترب
           </div>
           <div>
-            <h1 className="font-extrabold text-gray-900 text-sm md:text-base flex items-center gap-1.5">
-              <span>دستیار خرید حضوری ترب</span>
-              <span className="text-[10px] bg-red-100 text-torob-darkred font-bold px-1.5 py-0.2 rounded-full">
-                نسخه هکاتون
-              </span>
+            <h1 className="font-bold text-neutral-900 text-xs sm:text-sm leading-tight">
+              دستیار خرید حضوری
             </h1>
-            <p className="text-[11px] text-gray-400">
-              «قبل از راه افتادن، انتخابت و وضعیت فروشگاه را بررسی کن»
-            </p>
+            <span className="text-[10px] text-neutral-400">تهران • کاتالوگ جامع</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={resetSession}
-            title="شروع مجدد نشست"
-            className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={resetSession}
+          className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+          title="شروع دوباره"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
       </header>
 
-      {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Quick Entrance Choices (Shown at start) */}
+      {/* Chat Messages Scroll Area */}
+      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5">
+        {/* Entrance Cards (at start) */}
         {messages.length === 1 && (
-          <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm space-y-3">
-            <span className="text-xs font-bold text-gray-700 block">
-              برای شروع، یکی از دو مسیر زیر را انتخاب کنید:
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <button
-                onClick={() =>
-                  sendMessage(
-                    "کمکم کن یک هندزفری باکیفیت برای رفت‌وآمد و مکالمه در محدوده جمهوری با بودجه ۴٫۲ میلیون تومان و شرط ترب‌پی حضوری انتخاب کنم."
-                  )
-                }
-                className="text-right p-3 rounded-xl border border-torob-red/30 bg-red-50/30 hover:bg-red-50 hover:border-torob-red transition-all group"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-xs text-gray-900 group-hover:text-torob-darkred">
-                    «کمکم کن انتخاب کنم»
-                  </span>
-                  <Sparkles className="w-4 h-4 text-torob-red" />
-                </div>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  راهنمایی هوشمند براساس نیاز، مقایسه ۳ مدل برتر و فیلتر فروشگاه‌ها
-                </p>
-              </button>
+          <div className="grid grid-cols-1 gap-2 pt-1">
+            <button
+              onClick={() =>
+                sendMessage(
+                  "برای رفت‌وآمد یک هندزفری باکیفیت می‌خواهم با بودجه ۴٫۲ میلیون تومان و ترب‌پی حضوری در جمهوری"
+                )
+              }
+              className="text-right p-3 bg-neutral-50 hover:bg-red-50/50 hover:border-torob-red/30 rounded-xl border border-neutral-200 transition-all flex items-center justify-between group active:scale-98"
+            >
+              <div>
+                <span className="font-bold text-xs text-neutral-900 block group-hover:text-torob-red mb-0.5">
+                  «کمکم کن انتخاب کنم»
+                </span>
+                <span className="text-[11px] text-neutral-500">
+                  پیشنهاد ۳ مدل برتر متناسب با بودجه و نیاز شما
+                </span>
+              </div>
+              <span className="text-sm">🎯</span>
+            </button>
 
-              <button
-                onClick={() =>
-                  sendMessage(
-                    "مدل دقیق مورد نظرم Anker Soundcore R50i است؛ لطفاً فروشگاه‌های دارای ترب‌پی حضوری در تهران را نشان بده."
-                  )
-                }
-                className="text-right p-3 rounded-xl border border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all group"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-bold text-xs text-gray-900">
-                    «مدلم را می‌دانم»
-                  </span>
-                  <Store className="w-4 h-4 text-gray-400" />
-                </div>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  جستجوی مستقیم در ۳۳۱ هزار آفر و پیدا کردن ارزان‌ترین فروشنده حضوری
-                </p>
-              </button>
-            </div>
+            <button
+              onClick={() =>
+                sendMessage(
+                  "مدل Anker Soundcore R50i؛ نزدیک‌ترین فروشگاه حضوری دارای ترب‌پی در تهران کجاست؟"
+                )
+              }
+              className="text-right p-3 bg-neutral-50 hover:bg-neutral-100 rounded-xl border border-neutral-200 transition-all flex items-center justify-between group active:scale-98"
+            >
+              <div>
+                <span className="font-bold text-xs text-neutral-900 block mb-0.5">
+                  «مدلم را می‌دانم»
+                </span>
+                <span className="text-[11px] text-neutral-500">
+                  استعلام قیمت و موجودی مدل مدنظر در فروشگاه‌های تهران
+                </span>
+              </div>
+              <span className="text-sm">🔍</span>
+            </button>
           </div>
         )}
 
-        {/* Message Items */}
+        {/* Messages */}
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex flex-col ${
-              msg.role === "user" ? "items-start" : "items-end"
-            }`}
+            className={`flex flex-col ${msg.role === "user" ? "items-start" : "items-end"}`}
           >
             <div
-              className={`max-w-[92%] sm:max-w-[85%] rounded-2xl px-4 py-3 text-xs md:text-sm leading-relaxed ${
+              className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-torob-red text-white rounded-tr-xs shadow-sm self-start"
-                  : "bg-white text-gray-800 rounded-tl-xs shadow-xs border border-gray-100 self-end"
+                  ? "bg-torob-red text-white rounded-tr-xs"
+                  : "bg-neutral-100 text-neutral-800 rounded-tl-xs"
               }`}
             >
               {msg.content}
             </div>
 
-            {/* Attached Generative UI Components */}
+            {/* Generative UI Components */}
             {msg.uiComponent && (
               <div className="w-full">
                 {msg.uiComponent.type === "ProductComparison" && (
@@ -333,13 +315,10 @@ export default function ChatInterface() {
           </div>
         ))}
 
-        {/* Loading Indicator */}
         {isLoading && (
-          <div className="flex items-center gap-2 p-3 bg-white rounded-2xl border border-gray-100 shadow-xs w-max">
-            <span className="w-2 h-2 rounded-full bg-torob-red animate-ping" />
-            <span className="text-xs text-gray-500 font-medium">
-              دستیار در حال بررسی کاتالوگ و شروط خرید...
-            </span>
+          <div className="flex items-center gap-1.5 p-2.5 bg-neutral-100 rounded-xl w-max text-xs text-neutral-500">
+            <span className="w-1.5 h-1.5 rounded-full bg-torob-red animate-ping" />
+            <span>در حال بررسی...</span>
           </div>
         )}
 
@@ -349,16 +328,15 @@ export default function ChatInterface() {
       {/* Floating Judge Demo Panel */}
       <JudgeDemoPanel onTriggerDemoScenario={sendMessage} />
 
-      {/* Input Bar */}
-      <div className="p-3 bg-white/95 backdrop-blur border-t border-gray-200">
+      {/* Native App Style Input Bar */}
+      <div className="sticky bottom-0 z-40 bg-white border-t border-neutral-200/80 p-2.5 pb-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             sendMessage(input);
           }}
-          className="flex items-center gap-1.5 bg-gray-100/90 rounded-2xl px-3 py-1.5 border border-gray-200 focus-within:border-torob-red focus-within:bg-white transition-all shadow-inner"
+          className="flex items-center gap-1 bg-neutral-100 rounded-2xl px-2 py-1 border border-neutral-200/90 focus-within:border-neutral-400 focus-within:bg-white transition-all"
         >
-          {/* Multimodal: Push-to-Talk & Product Image */}
           <VoiceInput onTranscriptReady={sendMessage} disabled={isLoading} />
           <ImageInput onImageModelRecognized={sendMessage} disabled={isLoading} />
 
@@ -366,17 +344,18 @@ export default function ChatInterface() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="پیام یا نیاز خرید خود را بنویسید (مثلاً: هندزفری انکر r50i با ترب‌پی)..."
+            placeholder="چه محصولی مد نظرتان است؟..."
             disabled={isLoading}
-            className="flex-1 bg-transparent border-none text-xs md:text-sm text-gray-800 placeholder-gray-400 focus:outline-none px-2 py-1.5 font-sans"
+            className="flex-1 bg-transparent border-none text-xs sm:text-[13px] text-neutral-800 placeholder-neutral-400 focus:outline-none px-1.5 py-1"
           />
 
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="p-2 bg-torob-red hover:bg-torob-darkred text-white rounded-xl disabled:opacity-40 transition-all shadow-sm active:scale-95 shrink-0"
+            className="p-1.5 bg-torob-red hover:bg-torob-darkred text-white rounded-xl disabled:opacity-30 transition-all shrink-0 active:scale-95"
+            title="ارسال"
           >
-            <Send className="w-4 h-4 rotate-180" />
+            <Send className="w-3.5 h-3.5 rotate-180" />
           </button>
         </form>
       </div>

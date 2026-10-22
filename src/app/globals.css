@@ -3,23 +3,51 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased selection:bg-red-100 selection:text-torob-darkred;
+  :root {
+    --torob-red: #d32f2f;
+    --torob-dark: #1f2937;
+    --torob-bg: #f8f9fa;
+  }
+
+  html, body {
+    @apply bg-neutral-100 text-neutral-900 font-sans antialiased;
     direction: rtl;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 }
 
-/* Custom scrollbar for clean mobile chat */
+/* Mobile viewport container */
+.mobile-viewport {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+  position: relative;
+}
+
+/* Custom minimal scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 3px;
+  height: 3px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: #e5e7eb;
   border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+
+/* Smooth snap carousel for product cards */
+.scroll-snap-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-snap-item {
+  scroll-snap-align: start;
 }
