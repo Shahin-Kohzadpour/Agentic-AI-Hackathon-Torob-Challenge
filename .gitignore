@@ -1,7 +1,6 @@
-.env
-.env.*
-!.env.example
-__pycache__/
-*.py[cod]
-*.zip
-.DS_Store
+node_modules
+.next
+.env.local
+*.log
+data/torob.db
+tsconfig.tsbuildinfo
