@@ -1,0 +1,11 @@
+ایده ی خوبی هست که محصول ما امکان پشتیبانی از دریافت صوت کاربر و ورودی تصویری (مثل اسکرین شات خطا و...) رو هم داشته باشه.
+داخل آموزش های هکاتون به موارد زیر هم اشاره کردن که به نظرم بد نیست بهشون توجه داشته باشیم:
+-generative ui
+-copilotkit
+-AG-UI
+-system design
+-shadcn.com
+- virtual access token vs. personal access token
+- -using prompt injection if needed
+- - mega tool که یک اسکرین شات مربوط به ارائه رو پیوست کردم.
+-  

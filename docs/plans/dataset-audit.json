@@ -1,0 +1,682 @@
+{
+  "archive": "/home/arash/Downloads/starcoach-dataset-v16-cap300-csv.zip",
+  "analysis_date": "2026-10-22",
+  "tables": {
+    "shops": {
+      "rows": 6476,
+      "duplicate_ids": 0,
+      "nonempty_fields": {
+        "address": 6475,
+        "category_names": 4679,
+        "contacts": 6476,
+        "lat": 6476,
+        "location_label": 6475,
+        "lon": 6476,
+        "name": 6476,
+        "shop_id": 6476,
+        "weekly_hours": 4473,
+        "website_url": 90,
+        "supports_fast_delivery": 1601,
+        "payment_options": 266,
+        "instagram": 22
+      }
+    },
+    "products": {
+      "rows": 225903,
+      "duplicate_ids": 0,
+      "nonempty_fields": {
+        "brand_name": 57634,
+        "category_name": 225903,
+        "image_urls": 224684,
+        "persian_title": 225901,
+        "product_id": 225903,
+        "specs": 144599,
+        "model": 4056
+      }
+    },
+    "offers": {
+      "rows": 331506,
+      "duplicate_ids": 0,
+      "additional_offers_for_existing_product_shop_pair": 20315,
+      "nonempty_fields": {
+        "last_price_changed_at": 330737,
+        "offer_id": 331506,
+        "price_toman": 316423,
+        "product_id": 331506,
+        "seller_title": 331506,
+        "shop_id": 331506,
+        "description": 38377,
+        "warranty": 58943
+      },
+      "invalid_foreign_keys": 0,
+      "missing_prices": 15083,
+      "nonpositive_prices": 0,
+      "malformed_nonmissing_prices": 0
+    }
+  },
+  "payment_option_values": [
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"ترب‌پی\"}",
+      136
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"in_person\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"اسنپ‌پی\"}",
+      53
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"in_person\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"ترب‌پی\"}",
+      50
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"in_person\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"دیجی پی\"}",
+      45
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"اسنپ‌پی\"}",
+      30
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"in_person\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"تارا\"}",
+      26
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"دیجی پی\"}",
+      12
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"تارا\"}",
+      8
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"ازکی‌وام\"}",
+      4
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"ترب‌پی\"}",
+      4
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"اسنپ‌پی\"}",
+      3
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"دیجی پی\"}",
+      3
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"تارا\"}",
+      2
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": 0, \"provider_name\": \"اسنپ‌پی\"}",
+      2
+    ],
+    [
+      "{\"category_names\": [\"موبایل و کالای دیجیتال\", \"لپ‌تاپ، کامپیوتر، اداری\"], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"تارا\"}",
+      1
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"دکان ابزار\"}",
+      1
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 400000, \"provider_name\": \"دیجی پی\"}",
+      1
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 200, \"provider_name\": \"اسنپ‌پی\"}",
+      1
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"ازکی‌وام\"}",
+      1
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": null, \"min_price_toman\": null, \"provider_name\": \"تجهیزات آشپزخانه حلما\"}",
+      1
+    ],
+    [
+      "{\"category_names\": [], \"channel\": \"unknown\", \"max_price_toman\": 0, \"min_price_toman\": 0, \"provider_name\": \"جیتکس مارکت\"}",
+      1
+    ]
+  ],
+  "top_product_categories": [
+    [
+      "سیم و کابل برق ساختمان",
+      5274
+    ],
+    [
+      "دوربین مدار بسته",
+      3467
+    ],
+    [
+      "ساعت مچی عقربه‌ ای و دیجیتالی",
+      2510
+    ],
+    [
+      "چراغ پنلی و سقفی",
+      2370
+    ],
+    [
+      "کیف و کاور گوشی",
+      2176
+    ],
+    [
+      "سوکت و کانکتور",
+      2077
+    ],
+    [
+      "ژنراتور و موتور برق",
+      1790
+    ],
+    [
+      "پمپ خانگی و صنعتی",
+      1732
+    ],
+    [
+      "رله و بیمتال",
+      1684
+    ],
+    [
+      "کلید و فیوز مینیاتوری",
+      1507
+    ],
+    [
+      "درایو و اینورتر",
+      1505
+    ],
+    [
+      "سایر تجهیزات پنوماتیک",
+      1438
+    ],
+    [
+      "تاچ و ال سی دی گوشی و تبلت",
+      1418
+    ],
+    [
+      "پروژکتور و وال واشر",
+      1394
+    ],
+    [
+      "هدفون، هدست و هندزفری",
+      1339
+    ],
+    [
+      "شیر برقی",
+      1328
+    ],
+    [
+      "سایر الکتروموتور و لوازم جانبی",
+      1293
+    ],
+    [
+      "لوازم یدکی جارو برقی، جاروشارژی و بخارشوی",
+      1265
+    ],
+    [
+      "کنتاکتور",
+      1244
+    ],
+    [
+      "کلید و پریز",
+      1242
+    ],
+    [
+      "کابلشو و سرسیم",
+      1233
+    ],
+    [
+      "اتوماسیون صنعتی",
+      1221
+    ],
+    [
+      "ابزار جراحی",
+      1210
+    ],
+    [
+      "ریسه و شلنگ نوری",
+      1209
+    ],
+    [
+      "لوستر و چراغ تزئینی",
+      1171
+    ],
+    [
+      "کلید اتوماتیک",
+      1155
+    ],
+    [
+      "عطر و ادکلن",
+      1154
+    ],
+    [
+      "کف‌کش و لجن‌کش",
+      1151
+    ],
+    [
+      "خازن",
+      1092
+    ],
+    [
+      "اسپیکر و سیستم صوتی",
+      1063
+    ],
+    [
+      "عینک آفتابی",
+      1043
+    ],
+    [
+      "جک چهار میل پنوماتیک",
+      1021
+    ],
+    [
+      "سایر لامپ و چراغ",
+      1007
+    ],
+    [
+      "تابلو و جعبه برق",
+      987
+    ],
+    [
+      "محافظ صفحه نمایش گوشی",
+      982
+    ]
+  ],
+  "price_change_range": [
+    "2020-12-03T08:51:32.129814+00:00",
+    "2026-10-13T00:02:35.297834+00:00"
+  ],
+  "price_change_months": {
+    "2020-12": 3,
+    "2021-07": 1,
+    "2021-08": 1,
+    "2021-12": 11,
+    "2022-02": 8,
+    "2022-04": 1,
+    "2022-05": 2,
+    "2022-07": 1,
+    "2022-08": 3,
+    "2022-09": 1,
+    "2022-10": 10,
+    "2022-12": 7,
+    "2023-01": 13,
+    "2023-02": 7,
+    "2023-03": 7,
+    "2023-04": 14,
+    "2023-05": 9,
+    "2023-06": 6,
+    "2023-07": 18,
+    "2023-08": 31,
+    "2023-09": 41,
+    "2023-10": 53,
+    "2023-11": 60,
+    "2023-12": 55,
+    "2024-01": 57,
+    "2024-02": 25,
+    "2024-03": 103,
+    "2024-04": 328,
+    "2024-05": 321,
+    "2024-06": 156,
+    "2024-07": 677,
+    "2024-08": 196,
+    "2024-09": 85,
+    "2024-10": 56,
+    "2024-11": 145,
+    "2024-12": 103,
+    "2025-01": 64,
+    "2025-02": 85,
+    "2025-03": 156,
+    "2025-04": 576,
+    "2025-05": 248,
+    "2025-06": 97,
+    "2025-07": 460,
+    "2025-08": 390,
+    "2025-09": 287,
+    "2025-10": 1125,
+    "2025-11": 992,
+    "2025-12": 3045,
+    "2026-01": 3085,
+    "2026-02": 3790,
+    "2026-03": 1268,
+    "2026-04": 11544,
+    "2026-05": 22700,
+    "2026-06": 14967,
+    "2026-07": 18402,
+    "2026-08": 28370,
+    "2026-09": 87626,
+    "2026-10": 128845
+  },
+  "products_with_offers": 225903,
+  "shops_with_offers": 3792,
+  "products_with_at_least_2_distinct_sellers": 35254,
+  "products_with_at_least_3_distinct_sellers": 16218,
+  "max_distinct_products_per_shop": 300,
+  "max_offers_per_shop": 1346,
+  "max_offers_per_product": 105,
+  "top_offer_categories": [
+    [
+      "سیم و کابل برق ساختمان",
+      7837
+    ],
+    [
+      "دوربین مدار بسته",
+      5903
+    ],
+    [
+      "ژنراتور و موتور برق",
+      3496
+    ],
+    [
+      "تاچ و ال سی دی گوشی و تبلت",
+      3285
+    ],
+    [
+      "چراغ پنلی و سقفی",
+      3220
+    ],
+    [
+      "پمپ خانگی و صنعتی",
+      3093
+    ],
+    [
+      "ساعت مچی عقربه‌ ای و دیجیتالی",
+      2903
+    ],
+    [
+      "سوکت و کانکتور",
+      2671
+    ],
+    [
+      "کلید و فیوز مینیاتوری",
+      2659
+    ],
+    [
+      "هدفون، هدست و هندزفری",
+      2602
+    ],
+    [
+      "کیف و کاور گوشی",
+      2396
+    ],
+    [
+      "رله و بیمتال",
+      2385
+    ],
+    [
+      "کنتاکتور",
+      2318
+    ],
+    [
+      "درایو و اینورتر",
+      2254
+    ],
+    [
+      "باتری گوشی موبایل",
+      2181
+    ],
+    [
+      "اتوماسیون صنعتی",
+      2177
+    ],
+    [
+      "گوشی موبایل",
+      2122
+    ],
+    [
+      "کف‌کش و لجن‌کش",
+      2095
+    ],
+    [
+      "کلید و پریز",
+      2083
+    ],
+    [
+      "اسپیکر و سیستم صوتی",
+      2006
+    ],
+    [
+      "پروژکتور و وال واشر",
+      1987
+    ],
+    [
+      "کابلشو و سرسیم",
+      1943
+    ],
+    [
+      "کلید اتوماتیک",
+      1874
+    ],
+    [
+      "ریسه و شلنگ نوری",
+      1804
+    ],
+    [
+      "پیراهن مردانه",
+      1795
+    ]
+  ],
+  "comparison_categories": [
+    [
+      "دوربین مدار بسته",
+      {
+        "products": 3467,
+        "multiple_sellers": 747,
+        "three_plus_sellers": 427
+      }
+    ],
+    [
+      "ژنراتور و موتور برق",
+      {
+        "products": 1790,
+        "multiple_sellers": 555,
+        "three_plus_sellers": 405
+      }
+    ],
+    [
+      "سیم و کابل برق ساختمان",
+      {
+        "products": 5274,
+        "multiple_sellers": 1025,
+        "three_plus_sellers": 391
+      }
+    ],
+    [
+      "تاچ و ال سی دی گوشی و تبلت",
+      {
+        "products": 1418,
+        "multiple_sellers": 332,
+        "three_plus_sellers": 262
+      }
+    ],
+    [
+      "باتری گوشی موبایل",
+      {
+        "products": 795,
+        "multiple_sellers": 345,
+        "three_plus_sellers": 255
+      }
+    ],
+    [
+      "پمپ خانگی و صنعتی",
+      {
+        "products": 1732,
+        "multiple_sellers": 375,
+        "three_plus_sellers": 197
+      }
+    ],
+    [
+      "هدفون، هدست و هندزفری",
+      {
+        "products": 1339,
+        "multiple_sellers": 348,
+        "three_plus_sellers": 192
+      }
+    ],
+    [
+      "گوشی موبایل",
+      {
+        "products": 814,
+        "multiple_sellers": 341,
+        "three_plus_sellers": 191
+      }
+    ],
+    [
+      "اتوماسیون صنعتی",
+      {
+        "products": 1221,
+        "multiple_sellers": 371,
+        "three_plus_sellers": 185
+      }
+    ],
+    [
+      "ماشین اصلاح و ریش‌ تراش",
+      {
+        "products": 528,
+        "multiple_sellers": 283,
+        "three_plus_sellers": 181
+      }
+    ],
+    [
+      "کنتاکتور",
+      {
+        "products": 1244,
+        "multiple_sellers": 261,
+        "three_plus_sellers": 179
+      }
+    ],
+    [
+      "کلید و فیوز مینیاتوری",
+      {
+        "products": 1507,
+        "multiple_sellers": 255,
+        "three_plus_sellers": 152
+      }
+    ],
+    [
+      "چراغ پنلی و سقفی",
+      {
+        "products": 2370,
+        "multiple_sellers": 321,
+        "three_plus_sellers": 152
+      }
+    ],
+    [
+      "کف‌کش و لجن‌کش",
+      {
+        "products": 1151,
+        "multiple_sellers": 225,
+        "three_plus_sellers": 144
+      }
+    ],
+    [
+      "درایو و اینورتر",
+      {
+        "products": 1505,
+        "multiple_sellers": 248,
+        "three_plus_sellers": 129
+      }
+    ],
+    [
+      "رله و بیمتال",
+      {
+        "products": 1684,
+        "multiple_sellers": 316,
+        "three_plus_sellers": 128
+      }
+    ],
+    [
+      "سپر خودرو",
+      {
+        "products": 896,
+        "multiple_sellers": 227,
+        "three_plus_sellers": 127
+      }
+    ],
+    [
+      "کلید اتوماتیک",
+      {
+        "products": 1155,
+        "multiple_sellers": 218,
+        "three_plus_sellers": 126
+      }
+    ],
+    [
+      "کابلشو و سرسیم",
+      {
+        "products": 1233,
+        "multiple_sellers": 178,
+        "three_plus_sellers": 120
+      }
+    ],
+    [
+      "اسپیکر و سیستم صوتی",
+      {
+        "products": 1063,
+        "multiple_sellers": 276,
+        "three_plus_sellers": 119
+      }
+    ],
+    [
+      "میکروفون",
+      {
+        "products": 731,
+        "multiple_sellers": 248,
+        "three_plus_sellers": 114
+      }
+    ],
+    [
+      "کلید و پریز",
+      {
+        "products": 1242,
+        "multiple_sellers": 220,
+        "three_plus_sellers": 113
+      }
+    ],
+    [
+      "ضبط کننده ویدیویی دوربین‌های نظارتی و امنیتی",
+      {
+        "products": 870,
+        "multiple_sellers": 188,
+        "three_plus_sellers": 111
+      }
+    ],
+    [
+      "هواکش و فن تهویه",
+      {
+        "products": 757,
+        "multiple_sellers": 206,
+        "three_plus_sellers": 109
+      }
+    ],
+    [
+      "پاوربانک و شارژر همراه",
+      {
+        "products": 755,
+        "multiple_sellers": 201,
+        "three_plus_sellers": 109
+      }
+    ]
+  ],
+  "shop_details": {
+    "shops_with_explicit_in_person_payment": 82,
+    "website_or_instagram": 112,
+    "address_mentions_floor_or_unit": 6122,
+    "address_mentions_mall": 3671,
+    "coordinates_outside_broad_tehran_bbox": 0
+  },
+  "weekly_hours_day_statuses": {
+    "closed": 4006,
+    "declared": 27270,
+    "unsupported": 35
+  },
+  "coordinate_bounds": {
+    "lat": [
+      35.64033031672763,
+      35.812628383945565
+    ],
+    "lon": [
+      51.30525648593903,
+      51.509290119585316
+    ]
+  }
+}
