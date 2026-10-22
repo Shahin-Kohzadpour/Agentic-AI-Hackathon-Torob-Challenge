@@ -16,6 +16,13 @@ interface RawProductRow {
   offer_count: number;
 }
 
+const SEARCH_STOP_WORDS = new Set([
+  "اقتصادی", "ارزان", "گران", "بهترین", "خوب", "جدید", "قدیمی",
+  "قیمت", "مناسب", "پرچمدار", "میانرده", "میان", "رده", "برای",
+  "مدل", "نوع", "حدود", "تا", "تومان", "میلیون", "میلیونی",
+  "پیشنهاد", "معرفی", "بده", "داری", "چیا", "چی", "میخوام", "می‌خوام"
+]);
+
 export function searchProducts(
   query: string,
   category?: string | null,
@@ -37,12 +44,13 @@ export function searchProducts(
   const normQuery = normalizePersian(query);
   if (!normQuery) return [];
 
+  // Filter conversational and intent words that shouldn't restrict FTS
+  const allWords = normQuery.split(/\s+/).filter((w) => w.length > 0);
+  const meaningfulWords = allWords.filter((w) => !SEARCH_STOP_WORDS.has(w));
+  const effectiveWords = meaningfulWords.length > 0 ? meaningfulWords : allWords;
+
   // 1. Try FTS search with prefix tokens
-  const tokens = normQuery
-    .split(/\s+/)
-    .filter((t) => t.length > 0)
-    .map((t) => `${t}*`)
-    .join(" ");
+  const tokens = effectiveWords.map((t) => `${t}*`).join(" ");
 
   let rows: RawProductRow[] = [];
   try {
@@ -59,9 +67,32 @@ export function searchProducts(
       ORDER BY offer_count DESC, min_price ASC
       LIMIT ?
     `;
-    rows = db.prepare(ftsSql).all(tokens, limit * 2) as unknown as RawProductRow[];
+    rows = db.prepare(ftsSql).all(tokens, limit * 4) as unknown as RawProductRow[];
   } catch (err) {
-    console.warn("FTS query failed, falling back to LIKE:", err);
+    console.warn("FTS query failed:", err);
+  }
+
+  // 2. Fallback to FTS OR search if strict AND gave no results
+  if (!rows || rows.length === 0) {
+    try {
+      const orTokens = effectiveWords.map((t) => `${t}*`).join(" OR ");
+      const ftsSql = `
+        SELECT p.product_id, p.persian_title, p.brand_name, p.category_name, p.model,
+               p.image_urls, p.specs,
+               MIN(o.price_toman) as min_price,
+               COUNT(DISTINCT o.shop_id) as offer_count
+        FROM products_fts f
+        JOIN products p ON f.product_id = p.product_id
+        LEFT JOIN offers o ON p.product_id = o.product_id
+        WHERE products_fts MATCH ?
+        GROUP BY p.product_id
+        ORDER BY offer_count DESC, min_price ASC
+        LIMIT ?
+      `;
+      rows = db.prepare(ftsSql).all(orTokens, limit * 4) as unknown as RawProductRow[];
+    } catch {
+      // ignore
+    }
   }
 
   // 2. Fallback to LIKE if FTS gave no results

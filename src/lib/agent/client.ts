@@ -58,21 +58,33 @@ async function resolveIntelligentFallback(
 
   // 1. User selected a product and wants in-person stores with TorobPay
   if (norm.includes("انتخاب کردم") || norm.includes("فروشگاه‌های حضوری") || norm.includes("فروشگاه های حضوری") || norm.includes("کجا بخرم")) {
-    const pId = "product_92ac53fa75e18e8e73f20b56";
-    const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+    let pId = "product_92ac53fa75e18e8e73f20b56";
+    let pTitle = "هدفون بلوتوثی انکر Soundcore R50i مدل A3949";
+
+    const titleMatch = lastUserMsg.match(/«([^»]+)»/);
+    if (titleMatch) {
+      const db = getDatabase();
+      const row = db.prepare("SELECT product_id, persian_title FROM products WHERE persian_title = ? OR persian_title LIKE ? LIMIT 1").get(titleMatch[1], `%${titleMatch[1]}%`) as { product_id: string; persian_title: string } | undefined;
+      if (row) {
+        pId = row.product_id;
+        pTitle = row.persian_title;
+      }
+    }
+
+    const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, null, false);
     const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
     return {
-      textResponse: "فروشگاه‌های حضوری تاییدشده دارای ترب‌پی در تهران با تخمین زمان رسیدن بر مبنای ترافیک زنده نشان:",
+      textResponse: `فروشگاه‌های حضوری تهران برای «${pTitle}» با زمان رسیدن و وضعیت ترافیک زنده:`,
       uiComponent: {
         type: "StoreResults",
         props: {
           product_id: pId,
-          product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
+          product_title: pTitle,
           offers,
           user_location_name: userLocation.name,
           filters: {
-            max_budget: 4200000,
-            torob_pay_only: true,
+            max_budget: null,
+            torob_pay_only: false,
             max_distance_km: null,
           },
         },
@@ -84,7 +96,7 @@ async function resolveIntelligentFallback(
   if (norm.includes("هندزفری") || norm.includes("هدفون") || norm.includes("r50i") || norm.includes("soundcore") || norm.includes("کمکم کن")) {
     const products = searchProducts("r50i", "هدفون", 4200000, 3);
     return {
-      textResponse: "با بررسی کاتالوگ جامع ترب، ۳ مدل برتر متناسب با بودجه و نیاز شما برای مکالمه و رفت‌وآمد آماده شد:",
+      textResponse: "۳ مدل پیشنهادی در کارت‌های زیر آماده مقایسه است. برای یافتن فروشگاه‌های حضوری، مدل مد نظرتان را انتخاب کنید:",
       uiComponent: {
         type: "ProductComparison",
         props: { products },
@@ -92,14 +104,52 @@ async function resolveIntelligentFallback(
     };
   }
 
-  // 3. Extract keywords and search catalog
+  // 3. Broad brand queries clarification (شیائومی، سامسونگ، اپل)
+  if (norm === "شیائومی" || norm === "xiaomi") {
+    return {
+      textResponse: "برای برند شیائومی، سقف بودجه یا رده مد نظرتان را مشخص فرمایید:",
+      uiComponent: {
+        type: "NeedClarification",
+        props: {
+          question: "کدام رده از محصولات شیائومی را می‌خواهید؟",
+          field: "budget",
+          options: [
+            "گوشی شیائومی تا ۱۵ میلیون (اقتصادی)",
+            "گوشی شیائومی ۱۵ تا ۳۵ میلیون (میان‌رده)",
+            "گوشی پرچمدار شیائومی (بالای ۳۵ میلیون)",
+            "هندزفری و ساعت هوشمند شیائومی",
+          ],
+        },
+      },
+    };
+  }
+
+  if (norm === "سامسونگ" || norm === "samsung") {
+    return {
+      textResponse: "برای برند سامسونگ، رده محصول یا سقف بودجه را انتخاب فرمایید:",
+      uiComponent: {
+        type: "NeedClarification",
+        props: {
+          question: "کدام گروه از محصولات سامسونگ را ترجیح می‌دهید؟",
+          field: "budget",
+          options: [
+            "گوشی سامسونگ اقتصادی سری A",
+            "گوشی سامسونگ پرچمدار سری S",
+            "ساعت هوشمند و گلکسی بادز سامسونگ",
+          ],
+        },
+      },
+    };
+  }
+
+  // 4. Extract keywords and search catalog
   const cleanQ = cleanQueryKeywords(norm);
   const searchQ = cleanQ.length > 1 ? cleanQ : norm;
 
   const foundProducts = searchProducts(searchQ, null, null, 3);
   if (foundProducts.length > 0) {
     return {
-      textResponse: `مدل‌های پیشنهادی «${searchQ}» از کاتالوگ محصولات ترب با قیمت پایه و مشخصات فنی:`,
+      textResponse: `۳ مدل پیشنهادی «${searchQ}» در کارت‌های زیر آماده مقایسه است. مدل مد نظرتان را انتخاب کنید:`,
       uiComponent: {
         type: "ProductComparison",
         props: { products: foundProducts },
@@ -266,7 +316,13 @@ export async function runShoppingAgent(
         } else if (name === "search_products") {
           const query = String(args.query || args.search_term || "هندزفری");
           const cat = args.category ? String(args.category) : undefined;
-          const budget = args.max_budget || args.max_price ? Number(args.max_budget || args.max_price) : undefined;
+          let budget = args.max_budget || args.max_price ? Number(args.max_budget || args.max_price) : undefined;
+          if (!budget) {
+            const m = query.match(/تا\s*(\d+(?:[.,]\d+)?)\s*میلیون/);
+            if (m) {
+              budget = parseFloat(m[1].replace(",", ".")) * 1000000;
+            }
+          }
           const products = searchProducts(query, cat, budget, 3);
           outputData = products;
 
@@ -431,14 +487,42 @@ export async function runShoppingAgent(
 
       if (toolResponses.length > 0) {
         // Native tool response turn
+        const followUpMessages = [
+          ...conversation,
+          message,
+          ...toolResponses,
+          {
+            role: "system" as const,
+            content:
+              "یادآوری ضروری: تمام داده‌ها به صورت کارت‌های گرافیکی لمسی زیر پیام شما رندر شده‌اند. بنابراین در این پاسخ متنی، مطلقاً نباید نام کالاها، قیمت‌ها، مشخصات فنی یا شماره‌گذاری (۱، ۲، ۳) را تکرار کنید. فقط در ۱ یا ۲ جمله کوتاه و صمیمی کاربر را راهنمایی کنید که با لمس دکمه‌های کارت زیرین اقدام کند.",
+          },
+        ];
+
         const followUp = await client.chat.completions.create({
           model: model,
-          messages: [...conversation, message, ...toolResponses],
-          temperature: 0.3,
+          messages: followUpMessages,
+          temperature: 0.2,
         });
 
+        let textOut = cleanResponseText(followUp.choices[0].message.content || "");
+
+        // Programmatic Guardrail: If model still outputted bullet points or repeated specs, enforce clean concise copy!
+        if (activeUIComponent?.type === "ProductComparison") {
+          if (textOut.includes("۱)") || textOut.includes("1)") || textOut.includes("فروشنده") || textOut.length > 160) {
+            textOut = "۳ مدل منتخب کاتالوگ ترب را در کارت‌های زیر مقایسه کنید. با لمس دکمه «انتخاب»، فروشگاه‌های حضوری دارای ترب‌پی در تهران را نمایش می‌دهم:";
+          }
+        } else if (activeUIComponent?.type === "StoreResults") {
+          if (textOut.includes("۱)") || textOut.includes("1)") || textOut.length > 160) {
+            textOut = "فروشگاه‌های حضوری دارای خرید اقساطی ترب‌پی در تهران با تخمین ترافیک زنده آماده مراجعه هستند:";
+          }
+        } else if (activeUIComponent?.type === "NeedClarification") {
+          if (textOut.includes("۱)") || textOut.includes("1)") || textOut.length > 160) {
+            textOut = "برای یافتن دقیق‌ترین مدل و فروشگاه‌های حضوری، گزینه مد نظرتان را مشخص فرمایید:";
+          }
+        }
+
         return {
-          textResponse: cleanResponseText(followUp.choices[0].message.content || "اطلاعات با موفقیت از کاتالوگ استخراج شد:"),
+          textResponse: textOut || "اطلاعات با موفقیت آماده شد:",
           uiComponent: activeUIComponent,
         };
       }
