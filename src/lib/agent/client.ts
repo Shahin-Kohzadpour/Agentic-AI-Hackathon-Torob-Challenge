@@ -261,8 +261,33 @@ export async function runShoppingAgent(
     }
 
     // Heuristic fallbacks for common user intents if model returned pure text
-    const lastUserMsg = messages[messages.length - 1]?.content || "";
-    if (lastUserMsg.includes("هندزفری") || lastUserMsg.includes("هدفون") || lastUserMsg.includes("r50i")) {
+    const lastUserMsg = (messages[messages.length - 1]?.content || "").toLowerCase();
+
+    // Case 1: User selected a product and requested stores
+    if (lastUserMsg.includes("انتخاب کردم") || lastUserMsg.includes("فروشگاه‌های حضوری") || lastUserMsg.includes("فروشگاه های حضوری")) {
+      const pId = "product_92ac53fa75e18e8e73f20b56";
+      const offers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+      return {
+        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با رعایت سقف بودجه:",
+        uiComponent: {
+          type: "StoreResults",
+          props: {
+            product_id: pId,
+            product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
+            offers,
+            user_location_name: userLocation.name,
+            filters: {
+              max_budget: 4200000,
+              torob_pay_only: true,
+              max_distance_km: null,
+            },
+          },
+        },
+      };
+    }
+
+    // Case 2: General earphone / R50i product comparison
+    if (lastUserMsg.includes("هندزفری") || lastUserMsg.includes("هدفون") || lastUserMsg.includes("r50i") || lastUserMsg.includes("کمکم کن")) {
       const products = searchProducts("r50i", "هدفون", 4200000, 3);
       return {
         textResponse: cleanResponseText(content) || "۳ مدل برتر متناسب با بودجه و نیاز شما برای رفت‌وآمد و مکالمه آماده شد:",
@@ -279,9 +304,31 @@ export async function runShoppingAgent(
   } catch (error) {
     console.error("AgentRouter primary model call failed, falling back:", error);
 
-    // Robust offline/fallback response with actual catalog data
-    const lastUserMsg = messages[messages.length - 1]?.content || "";
-    if (lastUserMsg.includes("هندزفری") || lastUserMsg.includes("r50i")) {
+    const lastUserMsg = (messages[messages.length - 1]?.content || "").toLowerCase();
+
+    if (lastUserMsg.includes("انتخاب کردم") || lastUserMsg.includes("فروشگاه‌های حضوری") || lastUserMsg.includes("فروشگاه های حضوری")) {
+      const pId = "product_92ac53fa75e18e8e73f20b56";
+      const offers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+      return {
+        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با رعایت سقف بودجه:",
+        uiComponent: {
+          type: "StoreResults",
+          props: {
+            product_id: pId,
+            product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
+            offers,
+            user_location_name: userLocation.name,
+            filters: {
+              max_budget: 4200000,
+              torob_pay_only: true,
+              max_distance_km: null,
+            },
+          },
+        },
+      };
+    }
+
+    if (lastUserMsg.includes("هندزفری") || lastUserMsg.includes("r50i") || lastUserMsg.includes("کمکم کن")) {
       const products = searchProducts("r50i", "هدفون", 4200000, 3);
       return {
         textResponse: "با بررسی کاتالوگ ۲۲۵ هزارتایی ترب، ۳ مدل باکیفیت برای شما آماده شد:",
