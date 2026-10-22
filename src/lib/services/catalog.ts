@@ -1,6 +1,7 @@
 import { getDatabase } from "../db";
 import { normalizePersian } from "../normalize";
 import { calculateDistanceKm, extractAddressFloorUnit } from "../geo";
+import { getLiveTrafficRoute } from "./neshan";
 import { Product, EligibleOfferResult } from "@/types/dataset";
 
 interface RawProductRow {
@@ -247,4 +248,30 @@ export function findEligibleOffers(
   }
 
   return results;
+}
+
+export async function attachLiveTrafficToOffers(
+  offers: EligibleOfferResult[],
+  userLat: number = 35.6948,
+  userLon: number = 51.4089
+): Promise<EligibleOfferResult[]> {
+  for (let i = 0; i < Math.min(offers.length, 3); i++) {
+    const o = offers[i];
+    if (o.lat && o.lon) {
+      try {
+        const route = await getLiveTrafficRoute(userLat, userLon, o.lat, o.lon);
+        if (route) {
+          o.live_eta = {
+            driving_distance_km: route.distance_km,
+            duration_minutes: route.duration_minutes,
+            traffic_summary: route.traffic_summary,
+            eta_formatted: route.eta_formatted,
+          };
+        }
+      } catch (e) {
+        console.warn("Failed to get Neshan traffic route:", e);
+      }
+    }
+  }
+  return offers;
 }

@@ -173,13 +173,19 @@ export default function StoreResults({ data, onStartSellerCheck, onFilterChange 
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-neutral-500">
+                    <div className="flex items-center gap-2 text-[11px] text-neutral-500 flex-wrap">
                       <span>{offer.location_label || "تهران"}</span>
-                      {offer.distance_km !== null && (
-                        <>
-                          <span>•</span>
-                          <span>{offer.distance_km} کیلومتر</span>
-                        </>
+                      {offer.live_eta ? (
+                        <span className="text-[10px] font-bold text-sky-700 bg-sky-50 px-1.5 py-0.2 rounded">
+                          🚗 {offer.live_eta.duration_minutes} دقیقه با ترافیک زنده نشان ({offer.live_eta.driving_distance_km} کیلومتر)
+                        </span>
+                      ) : (
+                        offer.distance_km !== null && (
+                          <>
+                            <span>•</span>
+                            <span>{offer.distance_km} کیلومتر هوایی</span>
+                          </>
+                        )
                       )}
                     </div>
 

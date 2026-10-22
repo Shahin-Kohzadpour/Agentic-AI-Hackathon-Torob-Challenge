@@ -60,4 +60,10 @@ export interface EligibleOfferResult {
   distance_km: number | null;
   weekly_hours_summary: string;
   floor_unit?: string | null;
+  live_eta?: {
+    driving_distance_km: number;
+    duration_minutes: number;
+    traffic_summary: string;
+    eta_formatted: string;
+  };
 }

@@ -70,6 +70,12 @@ export interface VisitPlanProps {
   working_hours: string;
   payment_method: string;
   verification_badge: "SIMULATED_VERIFIED";
+  live_eta?: {
+    duration_minutes: number;
+    driving_distance_km: number;
+    traffic_summary: string;
+    eta_formatted: string;
+  };
   backup_shop?: {
     shop_name: string;
     location_label: string;

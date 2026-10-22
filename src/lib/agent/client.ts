@@ -1,9 +1,10 @@
 import OpenAI from "openai";
 import { AGENT_TOOLS } from "./tools";
 import { TOROB_AGENT_SYSTEM_PROMPT } from "./prompts";
-import { searchProducts, findEligibleOffers, getProductDetails } from "../services/catalog";
+import { searchProducts, findEligibleOffers, getProductDetails, attachLiveTrafficToOffers } from "../services/catalog";
 import { startSellerCheckJob } from "../services/seller-simulator";
 import { findHubsForCategory, extractAddressFloorUnit } from "../geo";
+import { getLiveTrafficRoute } from "../services/neshan";
 import { getDatabase } from "../db";
 import { UIComponentPayload } from "@/types/generative-ui";
 
@@ -153,7 +154,8 @@ export async function runShoppingAgent(
           const torobPay = Boolean(args.torob_pay_only);
           const maxDist = args.max_distance_km ? Number(args.max_distance_km) : null;
 
-          const offers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, maxDist, maxBudget, torobPay);
+          const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, maxDist, maxBudget, torobPay);
+          const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
           outputData = offers;
 
           const pDetails = getProductDetails(pId);
@@ -207,6 +209,19 @@ export async function runShoppingAgent(
           const db = getDatabase();
           const shopRow = db.prepare("SELECT * FROM shops WHERE shop_id = ?").get(shopId) as Record<string, unknown> | undefined;
 
+          let liveEta = undefined;
+          if (shopRow && shopRow.lat && shopRow.lon) {
+            const r = await getLiveTrafficRoute(userLocation.lat, userLocation.lon, Number(shopRow.lat), Number(shopRow.lon));
+            if (r) {
+              liveEta = {
+                duration_minutes: r.duration_minutes,
+                driving_distance_km: r.distance_km,
+                traffic_summary: r.traffic_summary,
+                eta_formatted: r.eta_formatted,
+              };
+            }
+          }
+
           activeUIComponent = {
             type: "VisitPlan",
             props: {
@@ -219,13 +234,14 @@ export async function runShoppingAgent(
                 floor_unit: shopRow ? extractAddressFloorUnit(String(shopRow.address || "")) : null,
                 lat: shopRow && shopRow.lat ? Number(shopRow.lat) : 35.6948,
                 lon: shopRow && shopRow.lon ? Number(shopRow.lon) : 51.4089,
-                distance_km: 1.2,
+                distance_km: liveEta ? liveEta.driving_distance_km : 1.2,
               },
               confirmed_price_toman: price,
               warranty,
               working_hours: "امروز تا ساعت ۲۰:۳۰ برقرار است",
               payment_method: "ترب‌پی حضوری (خرید اقساطی اعتباری)",
               verification_badge: "SIMULATED_VERIFIED",
+              live_eta: liveEta,
               backup_shop: backupName
                 ? {
                     shop_name: backupName,
@@ -276,9 +292,10 @@ export async function runShoppingAgent(
     // Case 1: User selected a product and requested stores
     if (lastUserMsg.includes("انتخاب کردم") || lastUserMsg.includes("فروشگاه‌های حضوری") || lastUserMsg.includes("فروشگاه های حضوری")) {
       const pId = "product_92ac53fa75e18e8e73f20b56";
-      const offers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+      const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+      const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
       return {
-        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با رعایت سقف بودجه:",
+        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با تخمین زمان رسیدن بر مبنای ترافیک زنده:",
         uiComponent: {
           type: "StoreResults",
           props: {
@@ -318,9 +335,10 @@ export async function runShoppingAgent(
 
     if (lastUserMsg.includes("انتخاب کردم") || lastUserMsg.includes("فروشگاه‌های حضوری") || lastUserMsg.includes("فروشگاه های حضوری")) {
       const pId = "product_92ac53fa75e18e8e73f20b56";
-      const offers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+      const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+      const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
       return {
-        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با رعایت سقف بودجه:",
+        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با تخمین زمان رسیدن بر مبنای ترافیک زنده:",
         uiComponent: {
           type: "StoreResults",
           props: {

@@ -117,6 +117,17 @@ export default function StoreMap({
           onSelectStore(store.id);
         }
       });
+
+      // If store is selected, draw live route connection line
+      if (isSel) {
+        L.polyline(
+          [
+            [userLocation.lat, userLocation.lon],
+            [store.lat, store.lon],
+          ],
+          { color: "#0284c7", weight: 3, dashArray: "5, 8", opacity: 0.8 }
+        ).addTo(markers);
+      }
     });
 
     // Fit bounds if stores exist

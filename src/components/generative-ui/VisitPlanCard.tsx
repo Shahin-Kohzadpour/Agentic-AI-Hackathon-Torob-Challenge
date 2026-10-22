@@ -59,6 +59,19 @@ export default function VisitPlanCard({ data }: Props) {
         )}
       </div>
 
+      {/* Neshan Live Traffic ETA Box */}
+      {data.live_eta && (
+        <div className="p-2.5 bg-sky-50/80 border border-sky-100 rounded-xl text-sky-900 text-xs flex items-center justify-between flex-wrap gap-1">
+          <span className="font-bold flex items-center gap-1">
+            <span>🚗 ترافیک زنده نشان:</span>
+            <span>{data.live_eta.duration_minutes} دقیقه</span>
+          </span>
+          <span className="text-[11px] text-sky-700">
+            {data.live_eta.driving_distance_km} کیلومتر رانندگی ({data.live_eta.traffic_summary})
+          </span>
+        </div>
+      )}
+
       {/* Details Bar */}
       <div className="flex items-center justify-between text-[11px] text-neutral-500 pt-1">
         <span className="flex items-center gap-1">
