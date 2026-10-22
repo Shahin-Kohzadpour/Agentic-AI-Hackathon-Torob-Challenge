@@ -11,7 +11,7 @@ export type UIComponentType =
 export interface NeedClarificationProps {
   question: string;
   options: string[];
-  field: "use_case" | "budget" | "feature" | "brand";
+  field?: "use_case" | "budget" | "feature" | "brand";
 }
 
 export interface ProductComparisonProps {

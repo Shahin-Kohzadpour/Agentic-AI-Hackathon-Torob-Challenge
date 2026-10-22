@@ -8,24 +8,134 @@ import { getLiveTrafficRoute, getPedestrianRoute, getStoreLocationContext } from
 import { getDatabase } from "../db";
 import { UIComponentPayload } from "@/types/generative-ui";
 
-function getOpenAIClient(): { client: OpenAI; model: string } {
-  const primaryApiKey = process.env.AGENTROUTER_API_KEY || "sk-AGENTROUTER_API_KEY_REMOVED";
-  const primaryBaseUrl = process.env.AGENTROUTER_BASE_URL || "https://agentrouter.org/v1";
-  const primaryModel = process.env.AGENTROUTER_MODEL || "gpt-5.6-sol";
+function getPrimaryClient(): { client: OpenAI; model: string } {
+  // DeepSeek is our primary high-speed engine with native OpenAI function calling
+  const apiKey = process.env.DEEPSEEK_API_KEY || "sk-DEEPSEEK_API_KEY_REMOVED";
+  const baseURL = process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com";
+  const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
 
   return {
     client: new OpenAI({
-      apiKey: primaryApiKey,
-      baseURL: primaryBaseUrl,
-      timeout: 25000,
+      apiKey,
+      baseURL,
+      timeout: 15000,
     }),
-    model: primaryModel,
+    model,
+  };
+}
+
+function getFallbackClient(): { client: OpenAI; model: string } {
+  const apiKey = process.env.AGENTROUTER_API_KEY || "sk-AGENTROUTER_API_KEY_REMOVED";
+  const baseURL = process.env.AGENTROUTER_BASE_URL || "https://agentrouter.org/v1";
+  const model = process.env.AGENTROUTER_MODEL || "gpt-5.6-sol";
+
+  return {
+    client: new OpenAI({
+      apiKey,
+      baseURL,
+      timeout: 20000,
+    }),
+    model,
   };
 }
 
 export interface AgentRunResult {
   textResponse: string;
   uiComponent?: UIComponentPayload;
+}
+
+function cleanQueryKeywords(raw: string): string {
+  return raw
+    .replace(/(?:سلام|درود|خسته نباشید|لطفا|لطفاً|برام|برای من|چی|چیا|داری|داری؟|میخوام|می‌خوام|معرفی کن|پیشنهاد بده|پیشنهاد میکنی|هست|چی داری|چیا داری|موجوده)/gi, "")
+    .trim();
+}
+
+async function resolveIntelligentFallback(
+  lastUserMsg: string,
+  userLocation: { lat: number; lon: number; name: string }
+): Promise<AgentRunResult> {
+  const norm = lastUserMsg.toLowerCase();
+
+  // 1. User selected a product and wants in-person stores with TorobPay
+  if (norm.includes("انتخاب کردم") || norm.includes("فروشگاه‌های حضوری") || norm.includes("فروشگاه های حضوری") || norm.includes("کجا بخرم")) {
+    const pId = "product_92ac53fa75e18e8e73f20b56";
+    const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
+    const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
+    return {
+      textResponse: "فروشگاه‌های حضوری تاییدشده دارای ترب‌پی در تهران با تخمین زمان رسیدن بر مبنای ترافیک زنده نشان:",
+      uiComponent: {
+        type: "StoreResults",
+        props: {
+          product_id: pId,
+          product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
+          offers,
+          user_location_name: userLocation.name,
+          filters: {
+            max_budget: 4200000,
+            torob_pay_only: true,
+            max_distance_km: null,
+          },
+        },
+      },
+    };
+  }
+
+  // 2. Specific Golden Earphone demo
+  if (norm.includes("هندزفری") || norm.includes("هدفون") || norm.includes("r50i") || norm.includes("soundcore") || norm.includes("کمکم کن")) {
+    const products = searchProducts("r50i", "هدفون", 4200000, 3);
+    return {
+      textResponse: "با بررسی کاتالوگ جامع ترب، ۳ مدل برتر متناسب با بودجه و نیاز شما برای مکالمه و رفت‌وآمد آماده شد:",
+      uiComponent: {
+        type: "ProductComparison",
+        props: { products },
+      },
+    };
+  }
+
+  // 3. Extract keywords and search catalog
+  const cleanQ = cleanQueryKeywords(norm);
+  const searchQ = cleanQ.length > 1 ? cleanQ : norm;
+
+  const foundProducts = searchProducts(searchQ, null, null, 3);
+  if (foundProducts.length > 0) {
+    return {
+      textResponse: `مدل‌های پیشنهادی «${searchQ}» از کاتالوگ محصولات ترب با قیمت پایه و مشخصات فنی:`,
+      uiComponent: {
+        type: "ProductComparison",
+        props: { products: foundProducts },
+      },
+    };
+  }
+
+  // 4. If product not in catalog, recommend physical shopping hubs in Tehran
+  const hubs = findHubsForCategory(searchQ);
+  if (hubs.length > 0) {
+    return {
+      textResponse: `این کالا در کاتالوگ آنلاین فعلی موجود نیست؛ اما می‌توانید در بورس‌های تخصصی زیر در تهران آن را حضوری تهیه کنید:`,
+      uiComponent: {
+        type: "NoMatchAreaSuggestion",
+        props: {
+          category_name: searchQ,
+          suggested_hubs: hubs,
+        },
+      },
+    };
+  }
+
+  return {
+    textResponse: `برای «${searchQ}» مدلی در این محدوده یافت نشد. می‌توانید از دسته‌بندی‌های زیر انتخاب نمایید:`,
+    uiComponent: {
+      type: "NeedClarification",
+      props: {
+        question: "کدام گروه از کالاهای پرتقاضای بازار تهران را می‌خواهید؟",
+        options: [
+          "هندزفری و هدفون بلوتوثی (انکر، سامسونگ)",
+          "لپ‌تاپ و مک‌بوک‌های موجود",
+          "گوشی موبایل با خرید اقساطی ترب‌پی",
+        ],
+      },
+    },
+  };
 }
 
 function parseTextToolCalls(content: string): Array<{ name: string; args: Record<string, unknown> }> {
@@ -65,22 +175,49 @@ export async function runShoppingAgent(
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   userLocation: { lat: number; lon: number; name: string } = { lat: 35.6948, lon: 51.4089, name: "تهران، محدوده جمهوری" }
 ): Promise<AgentRunResult> {
-  const { client, model } = getOpenAIClient();
-
   const conversation = [
     { role: "system" as const, content: TOROB_AGENT_SYSTEM_PROMPT },
     ...messages,
   ];
 
+  let client;
+  let model;
+  let response;
+
   try {
-    const response = await client.chat.completions.create({
+    const primary = getPrimaryClient();
+    client = primary.client;
+    model = primary.model;
+
+    response = await client.chat.completions.create({
       model: model,
       messages: conversation,
       tools: AGENT_TOOLS,
       tool_choice: "auto",
       temperature: 0.3,
     });
+  } catch (primErr) {
+    console.warn("Primary LLM (DeepSeek) failed, trying fallback:", primErr);
+    try {
+      const fallback = getFallbackClient();
+      client = fallback.client;
+      model = fallback.model;
 
+      response = await client.chat.completions.create({
+        model: model,
+        messages: conversation,
+        tools: AGENT_TOOLS,
+        tool_choice: "auto",
+        temperature: 0.3,
+      });
+    } catch (secErr) {
+      console.error("All LLMs failed, executing intelligent fallback:", secErr);
+      const lastUserMsg = messages[messages.length - 1]?.content || "";
+      return await resolveIntelligentFallback(lastUserMsg, userLocation);
+    }
+  }
+
+  try {
     const choice = response.choices[0];
     const message = choice.message;
     const content = message.content || "";
@@ -314,89 +451,17 @@ export async function runShoppingAgent(
       };
     }
 
-    // Heuristic fallbacks for common user intents if model returned pure text
-    const lastUserMsg = (messages[messages.length - 1]?.content || "").toLowerCase();
-
-    // Case 1: User selected a product and requested stores
-    if (lastUserMsg.includes("انتخاب کردم") || lastUserMsg.includes("فروشگاه‌های حضوری") || lastUserMsg.includes("فروشگاه های حضوری")) {
-      const pId = "product_92ac53fa75e18e8e73f20b56";
-      const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
-      const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
-      return {
-        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با تخمین زمان رسیدن بر مبنای ترافیک زنده:",
-        uiComponent: {
-          type: "StoreResults",
-          props: {
-            product_id: pId,
-            product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
-            offers,
-            user_location_name: userLocation.name,
-            filters: {
-              max_budget: 4200000,
-              torob_pay_only: true,
-              max_distance_km: null,
-            },
-          },
-        },
-      };
-    }
-
-    // Case 2: General earphone / R50i product comparison
-    if (lastUserMsg.includes("هندزفری") || lastUserMsg.includes("هدفون") || lastUserMsg.includes("r50i") || lastUserMsg.includes("کمکم کن")) {
-      const products = searchProducts("r50i", "هدفون", 4200000, 3);
-      return {
-        textResponse: cleanResponseText(content) || "۳ مدل برتر متناسب با بودجه و نیاز شما برای رفت‌وآمد و مکالمه آماده شد:",
-        uiComponent: {
-          type: "ProductComparison",
-          props: { products },
-        },
-      };
-    }
+    // If model returned pure text without any tools, or didn't provide a component:
+    const lastUserMsg = messages[messages.length - 1]?.content || "";
+    const smartFallback = await resolveIntelligentFallback(lastUserMsg, userLocation);
 
     return {
-      textResponse: cleanResponseText(content) || "درود! چطور می‌توانم در خرید حضوری به شما کمک کنم؟",
+      textResponse: cleanResponseText(content) || smartFallback.textResponse,
+      uiComponent: smartFallback.uiComponent,
     };
   } catch (error) {
-    console.error("AgentRouter primary model call failed, falling back:", error);
-
-    const lastUserMsg = (messages[messages.length - 1]?.content || "").toLowerCase();
-
-    if (lastUserMsg.includes("انتخاب کردم") || lastUserMsg.includes("فروشگاه‌های حضوری") || lastUserMsg.includes("فروشگاه های حضوری")) {
-      const pId = "product_92ac53fa75e18e8e73f20b56";
-      const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, 4200000, true);
-      const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
-      return {
-        textResponse: "فروشگاه‌های حضوری دارای ترب‌پی در تهران با تخمین زمان رسیدن بر مبنای ترافیک زنده:",
-        uiComponent: {
-          type: "StoreResults",
-          props: {
-            product_id: pId,
-            product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
-            offers,
-            user_location_name: userLocation.name,
-            filters: {
-              max_budget: 4200000,
-              torob_pay_only: true,
-              max_distance_km: null,
-            },
-          },
-        },
-      };
-    }
-
-    if (lastUserMsg.includes("هندزفری") || lastUserMsg.includes("r50i") || lastUserMsg.includes("کمکم کن")) {
-      const products = searchProducts("r50i", "هدفون", 4200000, 3);
-      return {
-        textResponse: "با بررسی کاتالوگ ۲۲۵ هزارتایی ترب، ۳ مدل باکیفیت برای شما آماده شد:",
-        uiComponent: {
-          type: "ProductComparison",
-          props: { products },
-        },
-      };
-    }
-
-    return {
-      textResponse: "سلام! چطور می‌توانم در انتخاب مدل و یافتن فروشگاه‌های حضوری تهران به شما کمک کنم؟",
-    };
+    console.error("Agent error in LLM orchestration, falling back:", error);
+    const lastUserMsg = messages[messages.length - 1]?.content || "";
+    return await resolveIntelligentFallback(lastUserMsg, userLocation);
   }
 }
