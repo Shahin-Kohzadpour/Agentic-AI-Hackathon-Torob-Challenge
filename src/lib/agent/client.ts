@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { normalizePersian } from "../normalize";
 import { queryWords } from "../services/catalog";
 import type { ChatMessage, Preferences } from "@/types/workflow";
+import {journeyFromText,productPhrase} from "./journey";
 
 export interface ShoppingIntent { query:string; useCase:string|null; feature:string|null; modelUsed:boolean }
 export function parseBudget(raw:string):{value:number|null;ambiguous:boolean;mentioned:boolean} {
@@ -14,21 +15,24 @@ export function parseBudget(raw:string):{value:number|null;ambiguous:boolean;men
   const thousand=s.match(/(\d+(?:\.\d+)?)\s*هزار(?:\s*تومان|\s*تومن)?/);
   if(thousand) return {value:Math.round(Number(thousand[1])*1000),ambiguous:false,mentioned:true};
   const number=s.match(/(?:بودجه|تا|سقف)\s*(?:ام|من|است|حدود|حداکثر|به)?\s*(\d+(?:\.\d+)?)/)||s.match(/(\d+(?:\.\d+)?)\s*(?:تومن|تومان)/);
+  if(number&&/^\s*(?:کیلومتر|km|[:：])/.test(s.slice((number.index||0)+number[0].length)))return {value:null,ambiguous:false,mentioned:false};
   if(number) {const value=Number(number[1]);return {value:value>=1000?Math.round(value):null,ambiguous:value<1000,mentioned:true};}
   return {value:null,ambiguous:false,mentioned:false};
 }
 export function preferencesFromText(message:string,current:Preferences):{preferences:Preferences;ambiguous:boolean} {
-  const next=structuredClone(current),s=normalizePersian(message),budget=parseBudget(message);
+  const next={...structuredClone(current),...journeyFromText(message)},s=normalizePersian(message),budget=parseBudget(message);
   if(budget.value!==null&&budget.value>0&&Number.isSafeInteger(budget.value)) next.budget=budget.value;
   if(/بدون (?:شرط )?ترب|حذف (?:شرط )?ترب|نقدی هم|اقساط لازم نیست/.test(s)) next.payment="any";
   else if(/ترب\s*پی|torob\s*pay|قسطی|اقساط/.test(s)) next.payment="torobpay";
   const radius=s.match(/(?:شعاع|فاصله|نزدیکتر از|نزدیک تر از)\s*(\d+(?:[٫.]\d+)?)\s*(?:کیلومتر|km)/);
   if(radius) next.radiusKm=Number(radius[1].replace("٫","."));
   const areas=[{names:/جمهوری|حافظ|شیخ هادی/,lat:35.6948,lon:51.4089,label:"جمهوری / حافظ"},{names:/ولیعصر|ولی عصر/,lat:35.7008,lon:51.4056,label:"چهارراه ولیعصر"},{names:/ونک/,lat:35.7575,lon:51.4099,label:"میدان ونک"},{names:/منیریه/,lat:35.6821,lon:51.4011,label:"میدان منیریه"},{names:/امین حضور/,lat:35.6845,lon:51.4367,label:"امین حضور"}];
-  const area=areas.find(a=>a.names.test(s));if(area) next.location={lat:area.lat,lon:area.lon,label:`مبدأ تقریبی محله: ${area.label}`};
+  const area=areas.find(a=>a.names.test(s));if(area&&(!current.locationConfirmed||/مبدا|مبدأ|نزدیک.{0,25}هستم|در.{0,25}هستم|از.{0,25}حرکت/.test(s))) next.location={lat:area.lat,lon:area.lon,label:`مبدأ تقریبی محله: ${area.label}`};
   return {preferences:next,ambiguous:budget.ambiguous};
 }
 export async function understandRequest(text:string,history:ChatMessage[]):Promise<ShoppingIntent> {
+  const phrase=productPhrase(text);
+  if(phrase)return {query:phrase,useCase:"خرید شارژر متناسب با دستگاه",feature:/usb[ -]?c|تایپ.?سی/i.test(normalizePersian(text))?"سازگاری USB-C و توان گوشی باید تأیید شود":null,modelUsed:false};
   const fallback:ShoppingIntent={query:queryWords(text).join(" "),useCase:/مکالمه|تماس/.test(text)?"مکالمه":/عکاسی|عکس|دوربین/.test(text)?"عکاسی":/دانشجو|دانشجویی|درس/.test(text)?"دانشجویی":/والدین|ساده/.test(text)?"استفادهٔ ساده":/رفت.?و.?آمد|روزمره/.test(text)?"رفت‌وآمد روزمره":null,feature:/باتری/.test(text)?"باتری":/نویز|anc/i.test(text)?"حذف نویز":null,modelUsed:false};
   const key=process.env.DEEPSEEK_API_KEY||process.env.AGENTROUTER_API_KEY||process.env.OPENAI_API_KEY;
   if(!key||process.env.AGENT_OFFLINE==="1") return fallback;

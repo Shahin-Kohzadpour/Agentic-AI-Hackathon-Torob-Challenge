@@ -35,6 +35,7 @@ export function searchProducts(query:string,category?:string|null,maxBudget?:num
   const head=queryWords(normalizedQuery.split(/\s+برای\s+/)[0]).join(" ");
   const accessory=/^(باتری|کاور|قاب|گلس|کیف|کابل|محافظ|شارژر|پایه|بند|لنز|اسپری|واکس|فیلتر|درب|فلت|تاچ|ال سی دی|lcd|کنترل|ریموت|مادربرد|کیبورد|دوربین گوشی|دوربین آیفون)(?:\s|$)/.test(head);
   const wantsAccessory=accessory;
+  const phoneCharger=accessory&&/^شارژر/.test(head)&&!/فندکی|خودرو|لپ|مک/.test(normalizedQuery);
   const mainPhone=!accessory&&(/گوشی|موبایل|آیفون|ایفون|iphone|galaxy|redmi/.test(normalizedQuery)||/\b[sa]\d{2}\b/.test(normalizedQuery));
   const mainHeadphone=!accessory&&/هدفون|هندزفری|ایرپاد|\br50i\b|\bqcy\b/.test(normalizedQuery);
   const mainLaptop=!accessory&&/لپ.?تاپ|لپ تاپ|laptop|macbook|نوت.?بوک/.test(normalizedQuery);
@@ -48,7 +49,7 @@ export function searchProducts(query:string,category?:string|null,maxBudget?:num
   const minExpression=statisticsAvailable?"ps.min_price":"(SELECT MIN(price_toman) FROM offers o WHERE o.product_id=p.product_id AND price_toman>0 AND price_toman=CAST(price_toman AS INTEGER))";
   const countExpression=statisticsAvailable?"ps.seller_count":"(SELECT COUNT(DISTINCT shop_id) FROM offers o WHERE o.product_id=p.product_id)";
   const join=statisticsAvailable?"LEFT JOIN product_stats ps ON ps.product_id=p.product_id":"";
-  const typeFilter=mainPhone?"p.category_name LIKE 'گوشی%'":mainLaptop?"p.category_name LIKE 'لپ%'":mainFridge?"(p.category_name LIKE 'یخچال%' OR p.category_name LIKE 'فریزر%')":mainTV?"p.category_name LIKE 'تلویزیون%'":mainCamera?"p.category_name LIKE 'دوربین%'":mainShoe?"p.category_name LIKE '%کفش%'":mainHeadphone?"(p.category_name LIKE '%هدفون%' OR p.category_name LIKE '%هندزفری%')":"";
+  const typeFilter=phoneCharger?"p.category_name LIKE 'شارژر گوشی%'":mainPhone?"p.category_name LIKE 'گوشی%'":mainLaptop?"p.category_name LIKE 'لپ%'":mainFridge?"(p.category_name LIKE 'یخچال%' OR p.category_name LIKE 'فریزر%')":mainTV?"p.category_name LIKE 'تلویزیون%'":mainCamera?"p.category_name LIKE 'دوربین%'":mainShoe?"p.category_name LIKE '%کفش%'":mainHeadphone?"(p.category_name LIKE '%هدفون%' OR p.category_name LIKE '%هندزفری%')":"";
   let rows:Raw[]=[];
   for(const expression of [...new Set(selectors)]) {
     try {
@@ -115,7 +116,7 @@ export function offersForProduct(productId:string,prefs:Preferences,includeExclu
     const reasons:string[]=[];
     if(prefs.budget!==null&&price>prefs.budget) reasons.push("بالاتر از سقف بودجه");
     if(prefs.payment==="torobpay"&&!payment.eligible) reasons.push(payment.summary);
-    if(prefs.radiusKm!==null&&(distance===null||distance>prefs.radiusKm)) reasons.push(distance===null?"فاصله نامعلوم":"خارج از شعاع انتخابی");
+    if(prefs.radiusMode!=="preferred"&&prefs.radiusKm!==null&&(distance===null||distance>prefs.radiusKm)) reasons.push(distance===null?"فاصله نامعلوم":"خارج از شعاع انتخابی");
     if(prefs.requireOpen&&hours.status!=="open_declared") reasons.push(hours.status==="unknown"?"ساعت مراجعه احراز نشده":"در زمان مراجعه و بافر ۲۰ دقیقه باز نیست");
     if(reasons.length&&!includeExcluded) continue;
     offers.push({offer_id:String(row.offer_id),product_id:String(row.product_id),shop_id:String(row.shop_id),shop_name:String(row.shop_name),location_label:row.location_label?String(row.location_label):null,address:row.address?String(row.address):null,lat,lon,seller_title:String(row.seller_title),price_toman:price,last_price_changed_at:row.last_price_changed_at?String(row.last_price_changed_at):null,warranty:row.warranty?String(row.warranty):null,description:row.description?String(row.description):null,has_torob_pay_in_person:payment.eligible,distance_km:distance===null?null:Math.round(distance*100)/100,weekly_hours_summary:hours.summary,floor_unit:extractAddressFloorUnit(row.address?String(row.address):null),hours_status:hours.status,payment_summary:payment.summary,warranty_summary:warrantySummary(row.warranty?String(row.warranty):null),category_name:String(row.category_name),shop_name_is_anonymized:![row.website_url,row.instagram].some(v=>typeof v==="string"&&v.trim()&&v!=="null"),source_url:typeof row.website_url==="string"&&/^https?:\/\//i.test(row.website_url)?row.website_url:null,source_mode:"dataset",availability:"listed_offer",exclusion_reasons:reasons});

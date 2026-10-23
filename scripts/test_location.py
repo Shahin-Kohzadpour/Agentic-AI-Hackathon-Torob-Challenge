@@ -60,7 +60,7 @@ with sync_playwright() as p:
  _,legacy=fresh();legacy.evaluate("async()=>{const d=await(await fetch('/api/workflow')).json();await fetch('/api/workflow',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'chat',version:d.session.version,message:'Anker R50i A3949'})})}")
  legacy.reload(wait_until='networkidle')
  legacy.get_by_role('button',name='خودم روی نقشه انتخاب می‌کنم',exact=False).click();legacy.get_by_role('button',name='تأیید موقعیت و ادامه',exact=False).click();legacy.locator('.product-card').first.wait_for()
- legacy.get_by_role('button',name='نمایش مکالمه',exact=True).click()
+ if legacy.get_by_role('button',name='نمایش مکالمه',exact=True).count():legacy.get_by_role('button',name='نمایش مکالمه',exact=True).click()
  assert not re.search('شبیه|دیتاست|مستعار|کاتالوگ',legacy.locator('body').inner_text())
  report['customer_copy_on_loaded_conversation']=True
  report['page_errors']=errors;assert not errors, errors

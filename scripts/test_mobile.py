@@ -14,7 +14,7 @@ with sync_playwright() as p:
  page.get_by_role('button',name='تأیید موقعیت و ادامه',exact=False).click()
  page.locator('.preferences').wait_for()
  assert not page.locator('.preferences').evaluate('(e)=>e.open')
- assert page.get_by_role('button',name='کمکم کن انتخاب کنم',exact=False).is_visible()
+ assert page.locator('.minimal-welcome').is_visible()
  assert float(page.locator('#shopping-message').evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)'))>=16
  page.screenshot(path=str(out/'01-start.png'))
  started=time.monotonic();page.get_by_label('نیاز یا مدل مورد نظر',exact=True).fill('Anker Soundcore R50i A3949 با ترب‌پی و بودجه ۴٫۲ میلیون تومان')
@@ -24,7 +24,7 @@ with sync_playwright() as p:
  assert page.locator('.mobile-latest-message').is_visible()
  page.screenshot(path=str(out/'02-product.png'))
  page.get_by_role('button',name='انتخاب و دیدن فروشگاه‌ها',exact=True).first.click()
- page.locator('.offer-card').first.wait_for();assert page.locator('.offer-card').count()==2
+ page.locator('.all-offers>summary').click();page.locator('.offer-card').first.wait_for();assert page.locator('.offer-card').count()==2
  page.get_by_role('button',name='بررسی شرایط خرید',exact=True).first.click()
  page.get_by_role('heading',name='تأیید فروشگاه در دسترس نیست',exact=True).wait_for(timeout=20000)
  assert '۳٬۸۵۰٬۰۰۰' in page.locator('.offer-card.recommended').inner_text()
@@ -39,7 +39,7 @@ with sync_playwright() as p:
  page.screenshot(path=str(out/'04-visit.png'));report['reload_preserves_visit']=True
  page.get_by_label('ویرایش شرایط خرید',exact=True).click()
  page.get_by_label('سقف بودجه',exact=False).fill('1000000');page.get_by_role('button',name='اعمال شرایط',exact=True).click()
- page.locator('.empty-results').wait_for();assert not page.locator('.preferences').evaluate('(e)=>e.open')
+ page.locator('.all-offers>summary').click();page.locator('.empty-results').wait_for();assert not page.locator('.preferences').evaluate('(e)=>e.open')
  report['editing_preferences_recalculates']=True
  sizes=[]
  for width,height in [(320,700),(360,780),(390,844),(430,932),(390,480)]:

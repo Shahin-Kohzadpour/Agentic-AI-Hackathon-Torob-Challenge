@@ -9,19 +9,22 @@ import {explainCandidates} from "./services/recommendations";
 import { shoppingAreas } from "./services/areas";
 import type { ShoppingSession, CheckRecord, CheckOutcome, Scenario } from "@/types/workflow";
 import {simulatedOutcome,simulatedPrice,SIMULATION_MESSAGES} from "./services/seller-simulator";
+import {isJourneyFollowup} from "./agent/journey";
+import {assessVisit,estimatedRoute,cachedJourneyRoute} from "./services/decision";
+import {getDatabase} from "./db";
 
 const OUTCOMES:CheckOutcome[]=["AVAILABLE","NO_ANSWER","OUT_OF_STOCK","PRICE_CHANGED","CLOSING","AMBIGUOUS_VARIANT"];
 function searchWithPreferences(session:ShoppingSession,query:string) {
   const products=searchProducts(query,null,session.preferences.budget,60).flatMap(product=>{
     const eligible=offersForProduct(product.product_id,session.preferences);
     const conditional=!eligible.length&&session.preferences.requireOpen?offersForProduct(product.product_id,session.preferences,true).filter(o=>o.exclusion_reasons.length===1&&o.hours_status==="unknown"):[];
-    const candidates=eligible.length?eligible:conditional;
+    const candidates=eligible.length?eligible:conditional.length?conditional:session.preferences.urgent?offersForProduct(product.product_id,{...session.preferences,radiusKm:null,requireOpen:false}):[];
     if(!candidates.length) return [];
     return [{...product,min_price_toman:Math.min(...candidates.map(o=>o.price_toman)),distinct_sellers:new Set(candidates.map(o=>o.shop_id)).size,needs_hours_verification:!eligible.length}];
   });
   return explainCandidates(products,session.preferences,/[a-z]+\d/i.test(query));
 }
-function failedIds(session:ShoppingSession) {
+export function failedIds(session:ShoppingSession) {
   const latest=new Map<string,CheckRecord>();
   for(const check of allChecks(session.id))if(check.productId===session.selectedProductId&&check.preferencesHash===JSON.stringify(session.preferences)&&!["CHECKING","CANCELLED"].includes(check.status))latest.set(check.shopId,check);
   return new Set([...latest.values()].filter(c=>["NO_ANSWER","OUT_OF_STOCK","CLOSING"].includes(c.status)||(c.status==="PRICE_CHANGED"&&session.preferences.budget!==null&&c.observedPrice!==null&&c.observedPrice>session.preferences.budget)).map(c=>c.shopId));
@@ -67,7 +70,7 @@ function buildSnapshot(session:ShoppingSession) {
   const visitCheck=session.visitCheckId?readCheck(session.id,session.visitCheckId):null;
   const visitOffer=visitCheck?getOffer(visitCheck.offerId,session.preferences):null;
   const backup=visitOffer?offers.find(o=>o.shop_id!==visitOffer.shop_id):null;
-  return {session,offers,excludedCount:all.filter(o=>o.exclusion_reasons.length).length,exclusionReasons:[...new Set(all.flatMap(o=>o.exclusion_reasons))],unknownHourOffers:session.preferences.requireOpen?all.filter(o=>o.exclusion_reasons.length===1&&o.hours_status==="unknown"):[],activeCheck,checkedOffer,visit:visitCheck&&visitOffer?{check:visitCheck,offer:visitOffer,backup:backup||null}:null,hubs:session.stage==="empty"?shoppingAreas(session.query):[],selectedProduct:session.selectedProductId?productCandidate(session.selectedProductId):null};
+  return {session,offers,failedShopIds:[...failedIds(session)],excludedCount:all.filter(o=>o.exclusion_reasons.length).length,exclusionReasons:[...new Set(all.flatMap(o=>o.exclusion_reasons))],unknownHourOffers:session.preferences.requireOpen?all.filter(o=>o.exclusion_reasons.length===1&&o.hours_status==="unknown"):[],activeCheck,checkedOffer,visit:visitCheck&&visitOffer?{check:visitCheck,offer:visitOffer,backup:backup||null}:null,hubs:session.query?shoppingAreas(session.query,session.preferences.location):[],selectedProduct:session.selectedProductId?productCandidate(session.selectedProductId):null};
 }
 export function snapshot(session:ShoppingSession) {return transaction(()=>buildSnapshot(session));}
 export type WorkflowSnapshot=ReturnType<typeof snapshot>;
@@ -80,6 +83,13 @@ export function startCheck(session:ShoppingSession,offerId:string,verifyUnknownH
   if(!offer||offer.product_id!==session.selectedProductId) throw new AppError("این آفر متعلق به محصول انتخاب‌شده نیست.",404,"OFFER_NOT_FOUND");
   const reasons=offer.exclusion_reasons.filter(r=>!(verifyUnknownHours&&r==="ساعت مراجعه احراز نشده"));
   if(reasons.length) throw new AppError(`این آفر واجد شرایط نیست: ${reasons.join("، ")}`);
+  if(session.preferences.urgent&&offer.distance_km!==null) {
+    const route=cachedJourneyRoute(session.preferences,offer)||estimatedRoute(offer.distance_km,session.preferences.travelMode);
+    const raw=(getDatabase().prepare("SELECT weekly_hours FROM shops WHERE shop_id=?").get(offer.shop_id) as {weekly_hours:string}|undefined)?.weekly_hours;
+    const visit=assessVisit(raw,session.preferences,route);
+    if(visit.status==="closed"||visit.status==="closing")throw new AppError(visit.reason+" زمان حرکت یا فروشگاه را تغییر دهید.");
+    if(session.preferences.radiusMode!=="preferred"&&session.preferences.radiusKm!==null&&route.distanceKm>session.preferences.radiusKm)throw new AppError("مسیر این فروشگاه از محدودهٔ قطعی شما بیشتر است؛ ابتدا محدوده را با انتخاب خودتان تغییر دهید.");
+  }
   const outcome=simulatedOutcome(offer,session.scenario);
   const now=new Date();
   const check:CheckRecord={id:`check_${randomUUID()}`,sessionId:session.id,version:session.version,offerId:offer.offer_id,productId:offer.product_id,shopId:offer.shop_id,status:"CHECKING",outcome,startedAt:now.toISOString(),readyAt:new Date(now.getTime()+1800).toISOString(),observedAt:null,observedPrice:null,message:"در حال اجرای سناریوی شبیه‌سازی‌شدهٔ فروشنده؛ تماس واقعی برقرار نمی‌شود.",source:"simulation",arrivalAt:session.preferences.arrivalAt};
@@ -135,6 +145,19 @@ export async function act(session:ShoppingSession,input:unknown):Promise<Workflo
   if(body.action!=="chat") return transaction(()=>actSync(body.action==="reset"?loadSession(session.id):session,body));
   const messageForCommand=text(body.message);
   const command=localCommand(messageForCommand,session,currentOffers(session),session.activeCheckId?readCheck(session.id,session.activeCheckId):null);
+  if(!command&&isJourneyFollowup(messageForCommand,Boolean(session.query)))return transaction(()=>{
+    if(body.version!==session.version||loadSession(session.id).version!==session.version)throw new AppError("شرایط تغییر کرده است؛ دوباره تلاش کنید.",409,"STALE_VERSION");
+    const oldVersion=session.version;
+    const parsed=preferencesFromText(messageForCommand,session.preferences);
+    session.preferences=validatePreferences(parsed.preferences as unknown as Record<string,unknown>,session.preferences);
+    invalidate(session);session.version++;
+    if(!session.selectedProductId)session.products=searchWithPreferences(session,session.query);
+    session.stage=session.selectedProductId?"stores":session.products.length?"products":"empty";
+    addMessage(session,"user",messageForCommand);
+    addMessage(session,"assistant","مسیر و زمان رسیدن را با شرایط تازه دوباره بررسی می‌کنم. مدل، بودجه و روش پرداخت شما حفظ شدند؛ فروشگاه و محدودهٔ خرید را روی نقشه مقایسه کنید.");
+    addEvent(session,"journey_changed","شرایط رفت‌وآمد تغییر کرد؛ اطلاعات وابسته دوباره محاسبه شدند.");
+    saveSession(session,oldVersion);return snapshot(session);
+  });
   if(command)return transaction(()=>{
     const oldVersion=session.version;
     if(body.version!==oldVersion||loadSession(session.id).version!==oldVersion)throw new AppError("این صفحه قدیمی است؛ آخرین وضعیت بارگذاری می‌شود.",409,"STALE_VERSION");

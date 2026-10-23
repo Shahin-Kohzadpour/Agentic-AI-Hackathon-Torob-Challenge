@@ -61,6 +61,13 @@ export function paymentEvidence(raw: unknown, price: number, category: string) {
 }
 export function validatePreferences(value: Record<string,unknown>, current: Preferences): Preferences {
   const next=structuredClone(current);
+  if("travelMode" in value) {if(!["walking","driving"].includes(String(value.travelMode)))throw new AppError("روش رفت‌وآمد معتبر نیست.");next.travelMode=value.travelMode as Preferences["travelMode"];}
+  if("radiusMode" in value) {if(!["hard","preferred"].includes(String(value.radiusMode)))throw new AppError("نوع محدوده معتبر نیست.");next.radiusMode=value.radiusMode as Preferences["radiusMode"];}
+  if("urgent" in value) {if(typeof value.urgent!=="boolean")throw new AppError("شرط فوریت معتبر نیست.");next.urgent=value.urgent;}
+  if("departureAt" in value) {
+    if(value.departureAt!==null&&(typeof value.departureAt!=="string"||!Number.isFinite(Date.parse(value.departureAt))||!/(Z|[+-]\d{2}:\d{2})$/.test(value.departureAt)))throw new AppError("زمان حرکت معتبر نیست.");
+    next.departureAt=value.departureAt as string|null;
+  }
   for(const key of ["budget","radiusKm"] as const) if(key in value) {
     const n=value[key];
     if(n!==null&&(typeof n!=="number"||!Number.isFinite(n)||n<=0||(key==="budget"&&!Number.isSafeInteger(n))||n>(key==="budget"?100_000_000_000_000:100))) throw new AppError("بودجه یا شعاع معتبر نیست.");

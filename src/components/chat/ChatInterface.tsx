@@ -1,73 +1,50 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, Headphones, MessageSquare, RotateCcw, Search, Send, ShieldCheck, Smartphone, Store, X } from "lucide-react";
-import type { WorkflowSnapshot } from "@/lib/workflow";
+import {useEffect,useRef,useState} from "react";
+import {MapPin,RotateCcw,Send,X,ChevronDown,Navigation} from "lucide-react";
+import type {WorkflowSnapshot} from "@/lib/workflow";
 import PreferencePanel from "./PreferencePanel";
 import ShoppingCanvas from "./ShoppingCanvas";
 import VoiceInput from "./VoiceInput";
 import ImageInput from "./ImageInput";
 import LocationPicker from "./LocationPicker";
-import { customerText } from "@/lib/customer-copy";
+import {customerText} from "@/lib/customer-copy";
 
 export default function ChatInterface() {
- const [choosingLocation,setChoosingLocation]=useState(false);
- const [data,setData]=useState<WorkflowSnapshot|null>(null),[input,setInput]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[conversationOpen,setConversationOpen]=useState(false),[entry,setEntry]=useState<"discover"|"direct">("discover");
- const sequence=useRef(0),controller=useRef<AbortController|null>(null),bottom=useRef<HTMLDivElement>(null),field=useRef<HTMLInputElement>(null);
- const resultStart=useRef<HTMLDivElement>(null);
- const focusStage=data?.session.stage;
- async function reload() {
-  const response=await fetch("/api/workflow",{cache:"no-store"});
-  const next=await response.json();if(!response.ok)throw new Error(next.error||"بارگذاری انجام نشد.");
-  setData(next);return next as WorkflowSnapshot;
- }
+ const [choosingLocation,setChoosingLocation]=useState(false),[data,setData]=useState<WorkflowSnapshot|null>(null),[input,setInput]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[conversationOpen,setConversationOpen]=useState(false);
+ const sequence=useRef(0),controller=useRef<AbortController|null>(null),field=useRef<HTMLInputElement>(null),answer=useRef<HTMLDivElement>(null);
+ async function reload(){const response=await fetch("/api/workflow",{cache:"no-store"});const next=await response.json();if(!response.ok)throw new Error(next.error||"بارگذاری انجام نشد.");setData(next);return next as WorkflowSnapshot;}
  useEffect(()=>{reload().catch(e=>setError(e.message));return()=>controller.current?.abort()},[]);
- useEffect(()=>{if(conversationOpen)bottom.current?.scrollIntoView({block:"nearest",behavior:"smooth"})},[data?.session.messages.length,busy,conversationOpen]);
- useEffect(()=>{const viewport=window.visualViewport;const resize=()=>{document.documentElement.style.setProperty("--keyboard-inset",`${Math.max(0,window.innerHeight-(viewport?.height||window.innerHeight)-(viewport?.offsetTop||0))}px`)};resize();viewport?.addEventListener("resize",resize);viewport?.addEventListener("scroll",resize);return()=>{viewport?.removeEventListener("resize",resize);viewport?.removeEventListener("scroll",resize)}},[]);
- useEffect(()=>{if(!focusStage)return;setConversationOpen(false);const timer=setTimeout(()=>{if(focusStage==="discover")window.scrollTo({top:0,behavior:"smooth"});else resultStart.current?.querySelector(".canvas-content")?.scrollIntoView({block:"start",behavior:"smooth"})},100);return()=>clearTimeout(timer)},[focusStage,data?.session.selectedProductId,data?.session.query,data?.session.visitCheckId]);
+ useEffect(()=>{const viewport=window.visualViewport;const resize=()=>document.documentElement.style.setProperty("--keyboard-inset",`${Math.max(0,window.innerHeight-(viewport?.height||window.innerHeight)-(viewport?.offsetTop||0))}px`);resize();viewport?.addEventListener("resize",resize);viewport?.addEventListener("scroll",resize);return()=>{viewport?.removeEventListener("resize",resize);viewport?.removeEventListener("scroll",resize)}},[]);
  useEffect(()=>{
-  if(data?.activeCheck?.status!=="CHECKING"||busy) return;
-  const generation=sequence.current;
-  const timer=setTimeout(async()=>{try {const response=await fetch("/api/workflow",{cache:"no-store"});const next=await response.json();if(response.ok&&sequence.current===generation)setData(next)}catch{setError("دریافت وضعیت بررسی انجام نشد؛ بارگذاری دوباره را بزنید.")}},850);
-  return()=>clearTimeout(timer);
+   if(data?.activeCheck?.status!=="CHECKING"||busy)return;
+   const generation=sequence.current;
+   const timer=setTimeout(async()=>{try{const response=await fetch("/api/workflow",{cache:"no-store"});const next=await response.json();if(response.ok&&sequence.current===generation)setData(next)}catch{setError("دریافت وضعیت انجام نشد؛ دوباره بارگذاری کنید.")}},850);
+   return()=>clearTimeout(timer);
  },[data,busy]);
- async function act(action:string,body:Record<string,unknown>={}) {
-  if(!data) return;
-  const generation=++sequence.current;controller.current?.abort();controller.current=new AbortController();
-  setBusy(true);setError("");
-  try {
-   const response=await fetch("/api/workflow",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,version:data.session.version,...body}),signal:controller.current.signal});
-   const next=await response.json();if(generation!==sequence.current)return;
-   if(!response.ok){if(response.status===409)await reload();throw new Error(next.error||"درخواست انجام نشد؛ دوباره تلاش کنید.")}
-   setData(next);if(action==="reset"){setInput("");setConversationOpen(false)}
-   return true;
-  } catch(e) {if(generation===sequence.current&&!(e instanceof Error&&e.name==="AbortError"))setError(e instanceof Error?e.message:"خطای ارتباط؛ دوباره تلاش کنید.")}
-  finally {if(generation===sequence.current)setBusy(false)}
+ async function act(action:string,body:Record<string,unknown>={}){
+   if(!data||busy)return;
+   const generation=++sequence.current;controller.current?.abort();controller.current=new AbortController();setBusy(true);setError("");
+   try{
+     const response=await fetch("/api/workflow",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,version:data.session.version,...body}),signal:controller.current.signal});
+     const next=await response.json();if(generation!==sequence.current)return;
+     if(!response.ok){if(response.status===409)await reload();throw new Error(next.error||"درخواست انجام نشد؛ دوباره تلاش کنید.")}
+     setData(next);if(action==="reset"){setInput("");setConversationOpen(false);window.scrollTo({top:0})}
+     if(action==="chat")setTimeout(()=>answer.current?.scrollIntoView({block:"start",behavior:"smooth"}),70);
+     return true;
+   }catch(e){if(generation===sequence.current&&!(e instanceof Error&&e.name==="AbortError"))setError(e instanceof Error?e.message:"خطای ارتباط؛ دوباره تلاش کنید.")}
+   finally{if(generation===sequence.current)setBusy(false)}
  }
- function send(text:string) {if(!text.trim()||busy)return;setInput("");act("chat",{message:text.trim()});}
- const stage=data?.session.stage||"discover";
- const latest=data?.session.messages.filter(message=>message.role==="assistant").at(-1)?.text;
- const lastAnswer=latest?customerText(latest):undefined;
- const steps=[{label:"انتخاب مدل",done:["stores","checking","visit"].includes(stage),active:["discover","products","empty"].includes(stage)},{label:"بررسی فروشگاه",done:stage==="visit",active:["stores","checking"].includes(stage)},{label:"برنامهٔ مراجعه",done:false,active:stage==="visit"}];
- const header=<header className="app-header"><a className="brand" href="/" aria-label="دستیار خرید حضوری ترب"><span className="brand-symbol">ترب</span><div><strong>کاوشگران</strong><span>همراه خرید حضوری ترب</span></div></a><div className="header-actions"><button className="text-button" aria-label="تغییر موقعیت" onClick={()=>setChoosingLocation(true)}><Store size={15}/>تهران</button>{data?.session.preferences.locationConfirmed&&<button className="icon-button" onClick={()=>act("reset")} title="شروع دوباره" aria-label="شروع دوباره"><RotateCcw size={18}/></button>}</div></header>;
- if(!data)return <div className="app-shell">{header}<main className="location-initial-loading" role="status"><p>{error||"در حال آماده‌سازی همراه خرید…"}</p>{error&&<button className="button" onClick={()=>reload().catch(e=>setError(e.message))}>تلاش دوباره</button>}</main></div>;
- if(!data.session.preferences.locationConfirmed||choosingLocation)return <div className="app-shell">{header}<LocationPicker initialLocation={data.session.preferences.location} busy={busy} error={error} onConfirm={location=>{act("preferences",{preferences:{location,locationConfirmed:true}}).then(success=>{if(success)setChoosingLocation(false)})}} onCancel={data.session.preferences.locationConfirmed?()=>setChoosingLocation(false):undefined}/></div>;
- return <div className="app-shell">
-  {header}
-  <div className="step-strip" aria-label="مراحل خرید">{steps.map((step,index)=><div className={step.active?"step active":step.done?"step done":"step"} key={step.label}><span>{step.done?<ShieldCheck size={16}/>:String(index+1).replace(/\d/g,c=>"۰۱۲۳۴۵۶۷۸۹"[Number(c)])}</span><strong>{step.label}</strong>{index<2&&<ArrowLeft size={14}/>}</div>)}</div>
-  <main className="workspace">
-   <aside className="conversation-panel"><div className="conversation-heading"><div><MessageSquare size={18}/><h1>با هم انتخاب کنیم</h1></div><button className="mobile-conversation-toggle icon-button" aria-expanded={conversationOpen} aria-label="نمایش مکالمه" onClick={()=>setConversationOpen(!conversationOpen)}><ChevronDown size={18}/></button></div>
-    {!conversationOpen&&(busy||lastAnswer)&&<div className="mobile-latest-message" role="status">{busy?<p className="mobile-working"><span className="loading-dots"/>در حال پیدا کردن گزینه‌های مناسب شما…</p>:<><p>{lastAnswer!.length>200?lastAnswer!.slice(0,200)+"…":lastAnswer}</p>{lastAnswer!.length>200&&<button className="text-button" onClick={()=>setConversationOpen(true)}>ادامهٔ توضیح و مکالمه</button>}</>}</div>}
-    <div className={`conversation-scroll ${conversationOpen?"expanded":""}`}>
-     {!data?.session.messages.length&&<div className="welcome"><p>سلام! نام مدل را می‌دانید یا برای انتخاب کمک می‌خواهید؟</p><div className="entry-options"><button className={entry==="discover"?"selected":""} onClick={()=>{setEntry("discover");field.current?.focus()}}><Headphones size={21}/><strong>کمکم کن انتخاب کنم</strong><span>با نیاز و بودجه شروع کنیم</span></button><button className={entry==="direct"?"selected":""} onClick={()=>{setEntry("direct");field.current?.focus()}}><Search size={21}/><strong>مدلم را می‌دانم</strong><span>نام یا کد دقیق مدل را بنویسید</span></button></div><p className="muted">{entry==="direct"?"کد مدل، ظرفیت یا رنگ را هم بنویسید تا گزینهٔ متفاوت پیشنهاد نشود.":"برای چه کاری خرید می‌کنید و سقف بودجه‌تان چند تومان است؟"}</p><div className="suggestion-chips"><button disabled={busy} onClick={()=>send("هندزفری برای رفت‌وآمد با بودجه ۴٫۲ میلیون تومان و ترب‌پی حضوری می‌خواهم")}><Headphones size={14}/>هندزفری برای رفت‌وآمد</button><button disabled={busy} onClick={()=>send("گوشی برای عکاسی می‌خواهم؛ کمکم کن انتخاب کنم")}><Smartphone size={14}/>گوشی برای عکاسی</button></div></div>}
-     {data?.session.messages.map(message=><div className={`message ${message.role}`} key={message.id}><span className="message-author">{message.role==="user"?"شما":"همراه خرید"}</span><p>{message.role==="assistant"?customerText(message.text):message.text}</p></div>)}
-     {busy&&<div className="working" role="status"><span className="loading-dots"/>در حال بررسی شرایط خرید…</div>}<div ref={bottom}/>
-    </div>
-    <div className="composer-area">{error&&<div className="error-banner" role="alert"><p>{error}</p><button aria-label="بستن پیام خطا" onClick={()=>setError("")}><X size={16}/></button><button className="text-button" onClick={()=>reload().catch(e=>setError(e.message))}>بارگذاری دوباره</button></div>}
-     <form className="composer" onSubmit={e=>{e.preventDefault();if(document.activeElement?.closest(".media-popover"))return;send(input)}}><div className="composer-tools"><VoiceInput contextKey={`${data?.session.id}:${data?.session.version}`} onTranscriptReady={send} disabled={busy||!data}/><ImageInput contextKey={`${data?.session.id}:${data?.session.version}`} onImageModelRecognized={query=>{setInput(query);field.current?.focus()}} disabled={busy||!data}/></div><label className="sr-only" htmlFor="shopping-message">نیاز یا مدل مورد نظر</label><input id="shopping-message" ref={field} value={input} onChange={e=>setInput(e.target.value)} maxLength={2000} placeholder={entry==="direct"?"نام یا کد مدل":"نیاز یا مدل مورد نظر"}/><button className="send-button" disabled={!input.trim()||busy||!data} aria-label="ارسال پیام"><Send size={18}/></button></form>
-     <p className="composer-disclosure">پیام صوتی و مدلِ تشخیص‌داده‌شده از عکس را پیش از ارسال بررسی کنید.</p>
-    </div>
-   </aside>
-   <div className="results-panel" ref={resultStart}>{data?<><PreferencePanel preferences={data.session.preferences} busy={busy} onApply={preferences=>act("preferences",{preferences})} onChooseLocation={()=>setChoosingLocation(true)}/><ShoppingCanvas data={data} busy={busy} act={act}/></>:<div className="initial-loading" role="status">{error||"در حال بارگذاری جلسهٔ خرید…"}</div>}</div>
-  </main>
- </div>;
+ function send(text:string){if(!text.trim()||busy)return;const message=text.trim();setInput("");act("chat",{message}).then(ok=>{if(!ok)setInput(message)})}
+ const messages=data?.session.messages||[],lastUser=messages.filter(m=>m.role==="user").at(-1),lastAnswer=messages.filter(m=>m.role==="assistant").at(-1);
+ const header=<header className="app-header minimal-header"><a className="minimal-brand" href="/" aria-label="کاوشگران، همراه خرید حضوری"><span className="brand-dot"/>کاوشگران</a><div className="header-actions"><button className="origin-button" aria-label="تغییر موقعیت" onClick={()=>setChoosingLocation(true)}><MapPin size={17}/><span>{data?.session.preferences.locationConfirmed?data.session.preferences.location.label:"تهران"}</span></button>{data?.session.preferences.locationConfirmed&&<button className="icon-button" disabled={busy} aria-label="شروع دوباره" onClick={()=>act("reset")}><RotateCcw size={18}/></button>}</div></header>;
+ if(!data)return <div className="app-shell minimal-app">{header}<main className="location-initial-loading" role="status"><p>{error||"در حال آماده‌سازی همراه خرید…"}</p>{error&&<button className="button" onClick={()=>reload().catch(e=>setError(e.message))}>تلاش دوباره</button>}</main></div>;
+ if(!data.session.preferences.locationConfirmed||choosingLocation)return <div className="app-shell minimal-app">{header}<LocationPicker initialLocation={data.session.preferences.location} busy={busy} error={error} onConfirm={location=>{act("preferences",{preferences:{location,locationConfirmed:true}}).then(success=>{if(success)setChoosingLocation(false)})}} onCancel={data.session.preferences.locationConfirmed?()=>setChoosingLocation(false):undefined}/></div>;
+ return <div className="app-shell minimal-app">{header}<main className="shopping-stream">
+   {!messages.length&&<div className="minimal-welcome"><span className="welcome-navigation"><Navigation size={30}/></span><h1>چی لازم داری،<br/>کجا برویم؟</h1><p>نیازت را بگو؛ مدل مناسب و مسیر خرید حضوری را با هم پیدا کنیم.</p><div className="minimal-suggestions"><button disabled={busy} onClick={()=>send("همین امشب شارژر سامسونگ می‌خواهم. پیاده می‌روم و ترجیح می‌دهم بیشتر از ۲ کیلومتر راه نروم.")}>شارژر برای همین امشب</button><button disabled={busy} onClick={()=>send("کفش برای پیاده‌روی روزمره می‌خواهم؛ کمکم کن مدل مناسب را انتخاب کنم.")}>کمکم کن کفش مناسب انتخاب کنم</button></div></div>}
+   {messages.length>2&&<><button className="text-button history-toggle" aria-label="نمایش مکالمه" aria-expanded={conversationOpen} onClick={()=>setConversationOpen(v=>!v)}>گفتگوهای قبلی<ChevronDown size={16}/></button>{conversationOpen&&<div className="conversation-history">{messages.slice(0,-2).map(m=><div key={m.id} className={`message ${m.role}`}><p>{m.role==="assistant"?customerText(m.text):m.text}</p></div>)}</div>}</>}
+   <div ref={answer} className="stream-answer">{lastUser&&<p className="user-request">{lastUser.text}</p>}{busy?<p className="mobile-latest-message stream-working" role="status"><span className="loading-dots"/>در حال بررسی شرایط خرید…</p>:lastAnswer&&<div className="mobile-latest-message stream-response"><p>{customerText(lastAnswer.text)}</p></div>}</div>
+   <PreferencePanel preferences={data.session.preferences} busy={busy} onApply={preferences=>act("preferences",{preferences})} onChooseLocation={()=>setChoosingLocation(true)}/>
+   <ShoppingCanvas data={data} busy={busy} act={act}/>
+   <div className="composer-area">{error&&<div className="error-banner" role="alert"><p>{error}</p><button aria-label="بستن پیام خطا" onClick={()=>setError("")}><X size={16}/></button><button className="text-button" onClick={()=>reload().catch(e=>setError(e.message))}>بارگذاری دوباره</button></div>}<form className="composer" onSubmit={e=>{e.preventDefault();if(document.activeElement?.closest(".media-popover"))return;send(input)}}><div className="composer-tools"><VoiceInput contextKey={`${data.session.id}:${data.session.version}`} onTranscriptReady={send} disabled={busy}/><ImageInput contextKey={`${data.session.id}:${data.session.version}`} onImageModelRecognized={query=>{setInput(query);field.current?.focus()}} disabled={busy}/></div><label className="sr-only" htmlFor="shopping-message">نیاز یا مدل مورد نظر</label><input id="shopping-message" ref={field} value={input} onChange={e=>setInput(e.target.value)} maxLength={2000} placeholder="چی لازم داری؟"/><button className="send-button" disabled={!input.trim()||busy} aria-label="ارسال پیام"><Send size={18}/></button></form><p className="composer-disclosure">قیمت، موجودی و ساعت نهایی را پیش از حرکت تأیید کنید.</p></div>
+ </main></div>;
 }

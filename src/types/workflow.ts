@@ -7,6 +7,10 @@ export interface Preferences {
   radiusKm: number | null;
   arrivalAt: string | null;
   requireOpen: boolean;
+  travelMode?: "walking" | "driving";
+  radiusMode?: "hard" | "preferred";
+  departureAt?: string | null;
+  urgent?: boolean;
   useCase: string | null;
   feature: string | null;
 }
@@ -49,5 +53,6 @@ export const DEFAULT_PREFERENCES: Preferences = {
   budget: null, payment: "any", radiusKm: null, arrivalAt: null, requireOpen: false,
   location: { lat: 35.6948, lon: 51.4089, label: "مبدأ پیش‌فرض: جمهوری، تهران" },
   locationConfirmed: false,
+  travelMode: "walking", radiusMode: "hard", departureAt: null, urgent: false,
   useCase: null, feature: null,
 };

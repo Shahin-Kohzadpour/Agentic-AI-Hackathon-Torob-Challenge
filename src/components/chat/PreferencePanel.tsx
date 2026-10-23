@@ -8,19 +8,23 @@ function localTime(value:string|null) {return value?new Date(new Date(value).get
 export default function PreferencePanel({preferences,busy,onApply,onChooseLocation}:{preferences:Preferences;busy:boolean;onApply:(p:Partial<Preferences>)=>void;onChooseLocation:()=>void}) {
  const [expanded,setExpanded]=useState(false);
  const [budget,setBudget]=useState(""),[radius,setRadius]=useState(""),[arrival,setArrival]=useState(""),[payment,setPayment]=useState(preferences.payment),[requireOpen,setRequireOpen]=useState(false),[error,setError]=useState("");
+ const [departure,setDeparture]=useState(""),[travelMode,setTravelMode]=useState(preferences.travelMode||"walking"),[radiusMode,setRadiusMode]=useState(preferences.radiusMode||"hard");
  const preferencesKey=JSON.stringify(preferences);
- useEffect(()=>{const current:Preferences=JSON.parse(preferencesKey);setBudget(current.budget?String(current.budget):"");setRadius(current.radiusKm?String(current.radiusKm):"");setArrival(localTime(current.arrivalAt));setPayment(current.payment);setRequireOpen(current.requireOpen);setExpanded(false)},[preferencesKey]);
+ useEffect(()=>{const current:Preferences=JSON.parse(preferencesKey);setBudget(current.budget?String(current.budget):"");setRadius(current.radiusKm?String(current.radiusKm):"");setArrival(localTime(current.arrivalAt));setPayment(current.payment);setRequireOpen(current.requireOpen);setDeparture(localTime(current.departureAt||null));setTravelMode(current.travelMode||"walking");setRadiusMode(current.radiusMode||"hard");setExpanded(false)},[preferencesKey]);
  const numeric=(s:string)=>Number(normalizePersian(s).replace(/[,٬]/g,""));
  function submit(e:React.FormEvent) {
   e.preventDefault();setError("");
   const b=budget?numeric(budget):null,r=radius?numeric(radius):null;
   if(b!==null&&(!Number.isSafeInteger(b)||b<1)){setError("بودجه را به تومان و عدد صحیح وارد کنید.");return;}
   if(r!==null&&(!Number.isFinite(r)||r<=0||r>100)){setError("شعاع را بین صفر و ۱۰۰ کیلومتر وارد کنید.");return;}
-  onApply({budget:b,radiusKm:r,payment,arrivalAt:arrival?`${arrival}:00+03:30`:null,requireOpen});
+  onApply({budget:b,radiusKm:r,payment,travelMode,radiusMode,departureAt:departure?`${departure}:00+03:30`:null,arrivalAt:arrival?`${arrival}:00+03:30`:null,requireOpen});
  }
  return <details className="preferences" open={expanded} onToggle={e=>setExpanded(e.currentTarget.open)}><summary aria-label="ویرایش شرایط خرید"><SlidersHorizontal size={19}/><span className="preference-summary"><strong>شرایط خرید شما</strong><span>{preferences.budget?formatToman(preferences.budget):"بودجه آزاد"} · {preferences.payment==="torobpay"?"ترب‌پی حضوری":"همهٔ روش‌های پرداخت"}{preferences.radiusKm?` · شعاع ${preferences.radiusKm.toLocaleString("fa-IR")} کیلومتر`:""}{preferences.requireOpen?" · باز در زمان مراجعه":""}</span></span><span className="summary-edit">ویرایش<ChevronDown size={16}/></span></summary><form onSubmit={submit}>
   <div className="filter-grid"><label>سقف بودجه <span className="muted">(تومان)</span><input inputMode="numeric" value={budget} onChange={e=>setBudget(e.target.value)} placeholder="مثلاً ۴۲۰۰۰۰۰"/></label>
   <label>شعاع جست‌وجو <span className="muted">(کیلومتر)</span><input inputMode="decimal" value={radius} onChange={e=>setRadius(e.target.value)} placeholder="بدون محدودیت"/></label>
+  <label>رفت‌وآمد<select value={travelMode} onChange={e=>setTravelMode(e.target.value as "walking"|"driving")}><option value="walking">پیاده</option><option value="driving">با ماشین</option></select></label>
+  <label>شرط محدوده<select value={radiusMode} onChange={e=>setRadiusMode(e.target.value as "hard"|"preferred")}><option value="hard">بیش از این فاصله نمی‌روم</option><option value="preferred">فاصلهٔ کمتر را ترجیح می‌دهم</option></select></label>
+  <label>زمان حرکت <span className="muted">(تهران)</span><input type="datetime-local" value={departure} onChange={e=>setDeparture(e.target.value)}/></label>
   <div className="location-filter"><span>مبدأ حرکت</span><button type="button" className="location-filter-button" onClick={onChooseLocation}><MapPin size={18}/><span>{preferences.location.label}</span><span className="text-button">تغییر</span></button></div>
   <label>زمان مراجعه <span className="muted">(تهران)</span><input type="datetime-local" value={arrival} onChange={e=>setArrival(e.target.value)}/></label></div>
   <div className="filter-footer"><label className="check-label"><input type="checkbox" checked={payment==="torobpay"} onChange={e=>setPayment(e.target.checked?"torobpay":"any")}/>ترب‌پی حضوری الزامی است</label><label className="check-label"><input type="checkbox" checked={requireOpen} onChange={e=>setRequireOpen(e.target.checked)}/>طبق ساعات ثبت‌شده هنگام مراجعه باز باشد</label></div>
