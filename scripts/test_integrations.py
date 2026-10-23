@@ -10,8 +10,8 @@ base=os.environ.get('TEST_BASE_URL','http://127.0.0.1:3107');ip=os.environ.get('
 def label(name,lines):
  image=Image.new('RGB',(800,420),'white');d=ImageDraw.Draw(image)
  font=None
- for name in ['C:/Windows/Fonts/arial.ttf','DejaVuSans.ttf']:
-  try:font=ImageFont.truetype(name,34);break
+ for font_name in ['C:/Windows/Fonts/arial.ttf','DejaVuSans.ttf']:
+  try:font=ImageFont.truetype(font_name,34);break
   except OSError:pass
  if font is None:font=ImageFont.load_default(size=34)
  for i,line in enumerate(lines):d.text((25,35+i*65),line,font=font,fill='#20252b')

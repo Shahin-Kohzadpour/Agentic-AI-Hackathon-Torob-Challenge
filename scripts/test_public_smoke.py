@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parent.parent;out=root/'test-results';out.mkdir(ex
 base=os.environ.get('TEST_BASE_URL','https://kavoshgaran.liara.run');ip=os.environ.get('TEST_ORIGIN_IP')
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,args=['--host-resolver-rules=MAP '+base.split('/')[2]+' '+ip] if ip else [])
- context=browser.new_context(viewport={'width':1440,'height':1000});page=context.new_page();errors=[]
+ context=browser.new_context(**p.devices['iPhone 13']);page=context.new_page();errors=[]
  page.on('pageerror',lambda error:errors.append(str(error)));page.goto(base,wait_until='networkidle')
  image=page.evaluate("async()=>{const r=await fetch('/api/product-image?productId=product_92ac53fa75e18e8e73f20b56');return {status:r.status,type:r.headers.get('content-type'),bytes:(await r.arrayBuffer()).byteLength}}")
  assert image['status']==200 and image['type']=='image/webp' and image['bytes']>100,image

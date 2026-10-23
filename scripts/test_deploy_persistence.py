@@ -12,11 +12,13 @@ with sync_playwright() as p:
  page=context.new_page();page.goto(base,wait_until='networkidle')
  expected=os.environ.get('EXPECTED_RELEASE')
  if expected:
+  stable=0
   for _ in range(30):
    health=page.evaluate("async()=>{try{return await (await fetch('/api/health')).json()}catch{return null}}")
-   if health and health.get('release')==expected:break
+   stable=stable+1 if health and health.get('release')==expected else 0
+   if stable>=3:break
    page.wait_for_timeout(2000)
-  assert health and health.get('release')==expected,{'expected_release':expected,'actual':health}
+  assert stable>=3,{'expected_release':expected,'actual':health}
  def api(body=None):
   result=page.evaluate('''async body=>{const r=await fetch('/api/workflow',body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{});return {status:r.status,data:await r.json()}}''',body)
   assert result['status']==200,result
@@ -43,6 +45,7 @@ with sync_playwright() as p:
    'same_events':current['session']['events']==previous['session']['events']}
   assert all(checks.values()),checks
   health=page.evaluate("async()=> (await fetch('/api/health')).json()")
+  assert not expected or health.get('release')==expected,health
   report={'at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'url':base,'forced_origin_ip':ip,'phase':os.environ.get('DEPLOY_TEST_PHASE','verify'),'checks':checks,'health':health}
   out=Path(__file__).resolve().parent.parent/'test-results';out.mkdir(exist_ok=True)
   (out/'deployment-persistence.json').write_text(json.dumps(report,indent=2),encoding='utf-8')

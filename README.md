@@ -4,7 +4,7 @@
 
 **نسخهٔ عمومی:** https://kavoshgaran.liara.run · **دموی قابل بازنشانی:** https://kavoshgaran.liara.run/demo
 
-رابط راست‌به‌چپ برای موبایل و دسکتاپ، مقایسهٔ مشخصات، بودجه/منطقه/شعاع/زمان/ترب‌پی، نقشه و مسیریابی نشان، خواندن برچسب محصول از تصویر و تاریخچهٔ تغییر تصمیم را پوشش می‌دهد. جست‌وجو و اعتبارسنجی آفرها روی سرور انجام می‌شود؛ مدل اختیار ساخت قیمت، شناسه، موجودی یا شروط خرید را ندارد.
+تجربهٔ اصلی **موبایل و لمسی** است: فیلترهای جمع‌شونده، پیام ثابت پایین صفحه، کارت‌های خوانا، مقایسهٔ مشخصات، بودجه/منطقه/شعاع/زمان/ترب‌پی، نقشه و مسیریابی نشان، خواندن برچسب از تصویر و تاریخچهٔ تصمیم. روی نمایشگر بزرگ هم همان قاب گوشی ارائه می‌شود. جست‌وجو و اعتبارسنجی آفرها روی سرور انجام می‌شود؛ مدل اختیار ساخت قیمت، شناسه، موجودی یا شروط خرید را ندارد.
 
 ## شفافیت داده
 
@@ -41,7 +41,7 @@ npm test
 npm run build
 python -m pip install -r requirements-dev.txt
 python -m playwright install chromium
-python scripts/test_browser.py
+python scripts/test_mobile.py
 python scripts/test_integrations.py
 ```
 
@@ -57,6 +57,7 @@ python scripts/test_integrations.py
 - [بک‌لاگ اجرا](docs/plans/EXECUTION-BACKLOG-fa.md) و [۴۰ سناریوی پذیرش](docs/plans/ACCEPTANCE-MAX-SCORE-fa.md)
 - [ممیزی وضعیت اولیه](docs/audits/2026-10-23/IMPLEMENTATION-AUDIT-fa.md)
 - [معماری و تصمیم‌ها](docs/delivery/ARCHITECTURE-fa.md)
+- [تجربهٔ موبایل و محدودهٔ آزمون](docs/delivery/MOBILE-FIRST-fa.md)
 - [متن سناریوی ویدئوی حدود پنج دقیقه](docs/delivery/DEMO-SCRIPT-fa.md)
 - [تطبیق توضیحات مسئول چالش و پاسخ‌های داوران](docs/delivery/REQUIREMENTS-CLARIFICATIONS-fa.md)
 

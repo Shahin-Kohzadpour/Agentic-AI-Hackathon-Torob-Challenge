@@ -37,7 +37,8 @@ if os.environ.get('DEMO_AUDIO_ONLY')=='1':
 timings=[]
 with sync_playwright() as p:
  browser=p.chromium.launch(headless=True,args=['--host-resolver-rules=MAP '+base.split('/')[2]+' '+ip] if ip else [])
- context=browser.new_context(**p.devices['iPhone 13'],record_video_dir=str(work),record_video_size={'width':390,'height':844},reduced_motion='reduce')
+ device={**p.devices['iPhone 13'],'viewport':{'width':390,'height':844}}
+ context=browser.new_context(**device,record_video_dir=str(work),record_video_size={'width':390,'height':844},reduced_motion='reduce')
  page=context.new_page();video=page.video
  def wait_ready():page.locator('.preferences').wait_for(timeout=40000)
  def send(message):
@@ -50,7 +51,12 @@ with sync_playwright() as p:
   page.get_by_role('button',name='شروع دوباره',exact=True).click()
   page.locator('.entry-options').wait_for(timeout=10000)
  def action(name):
-  if name=='intro':page.goto(base,wait_until='networkidle');wait_ready()
+  if name=='intro':
+   page.goto(base,wait_until='networkidle');wait_ready()
+   health=page.evaluate("async()=> (await fetch('/api/health')).json()")
+   assert health.get('release')==os.environ.get('EXPECTED_RELEASE','kavoshgaran-2026-10-23-r5-mobile'),health
+   assert page.locator('.brand strong').inner_text()=='کاوشگران'
+   assert not page.locator('.preferences').evaluate('(e)=>e.open')
   elif name=='discovery':
    send('هندزفری برای رفت و آمد با بودجه ۴٫۲ میلیون تومان می‌خواهم');scroll('.product-card');page.wait_for_timeout(5000)
    page.get_by_role('button',name='جدول مقایسه',exact=True).click();scroll('.comparison-wrapper')
@@ -86,8 +92,13 @@ with sync_playwright() as p:
    page.get_by_role('dialog',name='بررسی عکس محصول').wait_for()
    page.get_by_role('button',name='قرار دادن مدل در کادر پیام',exact=True).wait_for(state='visible')
    page.wait_for_function("!document.querySelector('[aria-label=\"بررسی عکس محصول\"] button.button')?.disabled",timeout=25000)
+   page.wait_for_timeout(2500)
+   model_input=page.get_by_role('dialog',name='بررسی عکس محصول').get_by_role('textbox')
+   model_input.scroll_into_view_if_needed();model_input.fill('Anker Soundcore R50i A3949');page.wait_for_timeout(2000)
+   page.get_by_role('button',name='قرار دادن مدل در کادر پیام',exact=True).click()
   elif name=='ending':
-   page.get_by_role('button',name='بستن عکس',exact=True).click();reset();page.evaluate('window.scrollTo(0,0)')
+   if page.get_by_role('button',name='بستن عکس',exact=True).count():page.get_by_role('button',name='بستن عکس',exact=True).click()
+   reset();page.evaluate('window.scrollTo(0,0)')
  for name,planned,text in sections:
   with wave.open(str(work/f'{name}.wav'),'rb') as audio:audio_seconds=audio.getnframes()/audio.getframerate()
   started=time.monotonic();action(name);elapsed=time.monotonic()-started
