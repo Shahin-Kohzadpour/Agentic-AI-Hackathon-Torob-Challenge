@@ -9,7 +9,11 @@ out=root/'test-results';out.mkdir(exist_ok=True)
 base=os.environ.get('TEST_BASE_URL','http://127.0.0.1:3107');ip=os.environ.get('TEST_ORIGIN_IP')
 def label(name,lines):
  image=Image.new('RGB',(800,420),'white');d=ImageDraw.Draw(image)
- font=ImageFont.truetype('C:/Windows/Fonts/arial.ttf',34)
+ font=None
+ for name in ['C:/Windows/Fonts/arial.ttf','DejaVuSans.ttf']:
+  try:font=ImageFont.truetype(name,34);break
+  except OSError:pass
+ if font is None:font=ImageFont.load_default(size=34)
  for i,line in enumerate(lines):d.text((25,35+i*65),line,font=font,fill='#20252b')
  p=out/name;image.save(p);return p
 fixtures=[('visible_label',label('fixture-label.png',['TEST FIXTURE: visible package label','Anker Soundcore R50i','Model A3949']),True),

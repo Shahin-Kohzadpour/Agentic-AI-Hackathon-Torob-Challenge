@@ -10,5 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+    env_file:
+      - .env.local
     volumes:
       - ./data:/app/data

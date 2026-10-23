@@ -9,7 +9,7 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "node --require ./scripts/register-ts.cjs --test tests/*.test.cjs",
-    "test:e2e": "python scripts/test_browser.py"
+    "test:e2e": "python scripts/test_mobile.py"
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.3.0",

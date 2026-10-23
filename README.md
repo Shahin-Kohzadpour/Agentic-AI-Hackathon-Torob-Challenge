@@ -39,7 +39,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
-python -m pip install playwright pillow
+python -m pip install -r requirements-dev.txt
 python -m playwright install chromium
 python scripts/test_browser.py
 python scripts/test_integrations.py
@@ -58,5 +58,6 @@ python scripts/test_integrations.py
 - [ممیزی وضعیت اولیه](docs/audits/2026-10-23/IMPLEMENTATION-AUDIT-fa.md)
 - [معماری و تصمیم‌ها](docs/delivery/ARCHITECTURE-fa.md)
 - [متن سناریوی ویدئوی حدود پنج دقیقه](docs/delivery/DEMO-SCRIPT-fa.md)
+- [تطبیق توضیحات مسئول چالش و پاسخ‌های داوران](docs/delivery/REQUIREMENTS-CLARIFICATIONS-fa.md)
 
 ارزیابی نهایی و امتیازدهی در اختیار داوران است. ارسال ویدئوی دمو برای پذیرش اثر الزامی است؛ انتشار سایت جای ارسال اثر در فرم برگزارکننده را نمی‌گیرد.

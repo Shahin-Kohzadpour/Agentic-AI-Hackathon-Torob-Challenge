@@ -1,1 +1,1 @@
-export const RELEASE_VERSION="kavoshgaran-2026-10-23-r4";
+export const RELEASE_VERSION="kavoshgaran-2026-10-23-r5-mobile";

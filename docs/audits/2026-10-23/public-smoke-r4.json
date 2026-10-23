@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-23T15:32:08Z",
+  "url": "https://kavoshgaran.liara.run",
+  "forced_origin_ip": "185.142.159.118",
+  "thumbnail": {
+    "status": 200,
+    "type": "image/webp",
+    "bytes": 12940
+  },
+  "external_guide_links": [
+    "https://charsou.com/",
+    "https://neshan.org/maps/@35.6948368608392,51.41224712339593,15z",
+    "https://kavoshgaran.liara.run/api/areas?q=%D9%87%D8%AF%D9%81%D9%88%D9%86%20ZX9999UNKNOWN",
+    "https://neshan.org/maps/@35.6945863014376,51.41049768776883,15z",
+    "https://kavoshgaran.liara.run/api/areas?q=%D9%87%D8%AF%D9%81%D9%88%D9%86%20ZX9999UNKNOWN",
+    "https://neshan.org/maps/@35.69514152838429,51.41599631483951,15z"
+  ],
+  "map_widget": true,
+  "loaded_map_tiles": 4,
+  "mobile_no_overflow": true,
+  "page_errors": []
+}

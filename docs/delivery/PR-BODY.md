@@ -1,0 +1,7 @@
+The previous prototype could fabricate shopping evidence, lose decisions on refresh, and stop after a seller failure. This change delivers a Persian shopping workflow backed by the complete Torob catalogue, persistent sessions, strict purchase constraints, six clearly labelled seller simulations, recovery to a real alternative offer, and an evidence-based visit card.
+
+The interface supports product discovery and comparison, mobile RTL, shared chat/form preferences, map/list views, actual Neshan routing, image model extraction with user confirmation, and sourced shopping-area suggestions when catalogue coverage is insufficient. Deployment uses Liara with a 4 GB instance and persistent storage; credentials and dataset files remain outside Git.
+
+Validation: 57 service tests including all 40 acceptance scenarios; TypeScript, ESLint and production build pass locally. Chromium exercised the complete seller-failure journey, reload persistence, two-user isolation, mobile overflow and rejected forged actions. Live image/model/routing and controlled unavailable-voice/map-tile fallbacks were also tested. Final deployment evidence is recorded in the delivery report.
+
+Limitations: seller contact is simulated, no stock is reserved, dataset shop names/phones are anonymized, and speech accuracy depends on browser support and has not been measured. No customer reviews or real-time Torob prices are invented.

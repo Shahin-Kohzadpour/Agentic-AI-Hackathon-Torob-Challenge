@@ -7,13 +7,14 @@ import "@fontsource/vazirmatn/700.css";
 import "@fontsource/vazirmatn/800.css";
 
 export const metadata: Metadata = {
-  title: "دستیار هوشمند خرید حضوری ترب | Torob Shopping Assistant",
+  title: "کاوشگران | همراه خرید حضوری ترب",
   description: "دستیار هوشمند ایجنتیک برای خرید حضوری، مقایسه فروشگاه‌های تهران، استعلام شبیه‌سازی‌شده و صدور کارت مراجعه",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
