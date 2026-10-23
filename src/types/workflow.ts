@@ -3,6 +3,7 @@ export interface Preferences {
   budget: number | null;
   payment: PaymentRequirement;
   location: { lat: number; lon: number; label: string };
+  locationConfirmed?: boolean;
   radiusKm: number | null;
   arrivalAt: string | null;
   requireOpen: boolean;
@@ -47,5 +48,6 @@ export interface ShoppingSession {
 export const DEFAULT_PREFERENCES: Preferences = {
   budget: null, payment: "any", radiusKm: null, arrivalAt: null, requireOpen: false,
   location: { lat: 35.6948, lon: 51.4089, label: "مبدأ پیش‌فرض: جمهوری، تهران" },
+  locationConfirmed: false,
   useCase: null, feature: null,
 };

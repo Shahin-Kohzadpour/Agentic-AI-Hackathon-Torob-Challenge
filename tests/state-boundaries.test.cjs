@@ -8,6 +8,26 @@ const {getDatabase}=require('../src/lib/db.ts');
 const {readJson}=require('../src/lib/http.ts');
 const {backupWorkflow}=require('../scripts/backup.cjs');
 const {DatabaseSync}=require('node:sqlite');
+const {validatePreferences}=require('../src/lib/policy.ts');
+const {DEFAULT_PREFERENCES}=require('../src/types/workflow.ts');
+const {customerText}=require('../src/lib/customer-copy.ts');
+
+test('a confirmed location requires a valid explicit point and survives reload',async()=>{
+ assert.throws(()=>validatePreferences({locationConfirmed:true},DEFAULT_PREFERENCES));
+ assert.throws(()=>validatePreferences({locationConfirmed:'yes',location:DEFAULT_PREFERENCES.location},DEFAULT_PREFERENCES));
+ assert.throws(()=>validatePreferences({locationConfirmed:true,location:{lat:32.6,lon:51.6,label:'outside'}},DEFAULT_PREFERENCES));
+ const s=loadSession();
+ const location={lat:35.7575,lon:51.4099,label:'موقعیت فعلی من'};
+ const d=await act(s,{action:'preferences',version:s.version,preferences:{location,locationConfirmed:true}});
+ const restored=snapshot(loadSession(d.session.id));
+ assert.equal(restored.session.preferences.locationConfirmed,true);
+ assert.deepEqual(restored.session.preferences.location,location);
+});
+test('customer wording never converts internal checks into a seller confirmation',()=>{
+ const text=customerText('پاسخ شبیه‌سازی‌شده: فروشنده موجودی همین عنوان آفر را اعلام کرد.');
+ assert.match(text,/نیاز دارند/);assert.doesNotMatch(text,/فروشنده.*اعلام کرد|شبیه/);
+ assert.match(customerText('در این دیتاست گزینه‌ای پیدا نشد'),/نتایج فعلی/);
+});
 const action=(d,a,extra={})=>act(loadSession(d.session.id),{action:a,version:d.session.version,...extra});
 async function stores(){let d=await act(loadSession(),{action:'chat',version:0,message:'Anker R50i A3949 با ترب‌پی و بودجه ۴٫۲ میلیون تومان'});return action(d,'select_product',{productId:d.session.products[0].product_id});}
 function advance(d){const c=readCheck(d.session.id,d.activeCheck.id);c.readyAt=new Date(0).toISOString();putCheck(c);return snapshot(loadSession(d.session.id));}

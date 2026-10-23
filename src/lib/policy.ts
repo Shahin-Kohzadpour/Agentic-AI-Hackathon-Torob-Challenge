@@ -68,6 +68,10 @@ export function validatePreferences(value: Record<string,unknown>, current: Pref
   }
   if("payment" in value) {if(!["any","torobpay"].includes(String(value.payment))) throw new AppError("روش پرداخت معتبر نیست.");next.payment=value.payment as Preferences["payment"];}
   if("requireOpen" in value) {if(typeof value.requireOpen!=="boolean") throw new AppError("شرط زمان معتبر نیست.");next.requireOpen=value.requireOpen;}
+  if("locationConfirmed" in value) {
+    if(typeof value.locationConfirmed!=="boolean" || (value.locationConfirmed && !value.location)) throw new AppError("موقعیت انتخابی را تأیید کنید.");
+    next.locationConfirmed=value.locationConfirmed;
+  }
   if("arrivalAt" in value) {
     if(value.arrivalAt!==null&&(typeof value.arrivalAt!=="string"||!Number.isFinite(Date.parse(value.arrivalAt))||!/(Z|[+-]\d{2}:\d{2})$/.test(value.arrivalAt))) throw new AppError("زمان مراجعه را با منطقهٔ زمانی وارد کنید.");
     next.arrivalAt=value.arrivalAt as string|null;

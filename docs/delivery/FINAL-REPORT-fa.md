@@ -1,5 +1,7 @@
 # گزارش تحقق اهداف و بستهٔ تحویل کاوشگران
 
+به‌روزرسانی بعدی: [شروع خرید با انتخاب GPS یا نقشه در نسخهٔ r6-location](LOCATION-FIRST-fa.md). شواهد زیر مربوط به نسخهٔ r5-mobile و مراحل پیشین هستند؛ ویدئو در مرحلهٔ r6 تغییر نکرده است.
+
 آدرس نهایی: **https://kavoshgaran.liara.run** · دموی قابل بازنشانی: **https://kavoshgaran.liara.run/demo**
 
 نسخهٔ نهایی موبایل: `kavoshgaran-2026-10-23-r5-mobile` از commit `574dc5a`؛ انتشار روی لیارا با ۴ گیگابایت RAM و دیسک پایدار ۵ گیگابایتی. نسخهٔ r4 از commit `60f785c` مبنای شواهد پیشین است. نتایج نسخه‌ها در فایل‌های جدا ثبت می‌شوند. Pull Request: https://github.com/Shahin-Kohzadpour/Agentic-AI-Hackathon-Torob-Challenge/pull/1

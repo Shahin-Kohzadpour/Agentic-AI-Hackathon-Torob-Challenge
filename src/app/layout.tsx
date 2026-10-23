@@ -8,7 +8,7 @@ import "@fontsource/vazirmatn/800.css";
 
 export const metadata: Metadata = {
   title: "کاوشگران | همراه خرید حضوری ترب",
-  description: "دستیار هوشمند ایجنتیک برای خرید حضوری، مقایسه فروشگاه‌های تهران، استعلام شبیه‌سازی‌شده و صدور کارت مراجعه",
+  description: "همراه هوشمند خرید حضوری؛ انتخاب محصول، مقایسهٔ فروشگاه‌های نزدیک و برنامه‌ریزی مراجعه در تهران",
 };
 
 export const viewport: Viewport = {
