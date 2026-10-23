@@ -142,8 +142,20 @@ export default function StoreResults({ data, onStartSellerCheck, onFilterChange 
       ) : null}
 
       {filteredOffers.length === 0 ? (
-        <div className="text-center py-6 text-neutral-400 text-xs">
-          فروشگاهی با این فیلترها یافت نشد.
+        <div className="text-center py-6 bg-neutral-50/80 rounded-xl p-4 my-2 border border-neutral-100">
+          <p className="text-neutral-600 text-xs font-medium mb-2.5">
+            {torobPayOnly && data.offers.length > 0
+              ? "این کالا در حال حاضر در فروشگاه‌های دارای ترب‌پی موجود نیست، اما در فروشگاه‌های حضوری با پرداخت نقدی و کارت‌خوان موجود است."
+              : "فروشگاهی با این فیلترها یافت نشد."}
+          </p>
+          {torobPayOnly && data.offers.length > 0 && (
+            <button
+              onClick={() => setTorobPayOnly(false)}
+              className="px-3.5 py-1.5 bg-torob-red text-white text-[11px] font-bold rounded-lg hover:bg-torob-darkred transition-all shadow-xs"
+            >
+              نمایش همه فروشگاه‌های حضوری ({data.offers.length} فروشگاه)
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">
@@ -166,9 +178,13 @@ export default function StoreResults({ data, onStartSellerCheck, onFilterChange 
                       <h4 className="font-bold text-neutral-900 text-xs">
                         {offer.shop_name}
                       </h4>
-                      {offer.has_torob_pay_in_person && (
-                        <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
-                          ترب‌پی حضوری
+                      {offer.has_torob_pay_in_person ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          ترب‌پی حضوری (قسطی)
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-neutral-600 bg-neutral-100 px-1.5 py-0.5 rounded">
+                          کارت‌خوان و نقدی
                         </span>
                       )}
                       {offer.traffic_zone?.in_traffic_zone && (

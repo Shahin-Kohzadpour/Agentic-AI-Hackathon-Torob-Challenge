@@ -4,3 +4,4 @@ node_modules
 *.log
 data/torob.db
 tsconfig.tsbuildinfo
+scratch/

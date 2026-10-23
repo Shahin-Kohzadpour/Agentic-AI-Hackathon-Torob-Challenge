@@ -20,8 +20,69 @@ const SEARCH_STOP_WORDS = new Set([
   "اقتصادی", "ارزان", "گران", "بهترین", "خوب", "جدید", "قدیمی",
   "قیمت", "مناسب", "پرچمدار", "میانرده", "میان", "رده", "برای",
   "مدل", "نوع", "حدود", "تا", "تومان", "میلیون", "میلیونی",
-  "پیشنهاد", "معرفی", "بده", "داری", "چیا", "چی", "میخوام", "می‌خوام"
+  "پیشنهاد", "معرفی", "بده", "داری", "چیا", "چی", "میخوام", "می‌خوام",
+  "لطفا", "لطفاً", "سلام", "درود", "خریدم", "خرید", "حضوری", "تهران",
+  "کمکم", "کن", "دنبال", "هستم", "باشه", "داشته", "باشند"
 ]);
+
+function scoreProductCandidate(
+  row: RawProductRow,
+  effectiveWords: string[]
+): number {
+  let score = 0;
+  const title = normalizePersian(row.persian_title || "");
+  const cat = normalizePersian(row.category_name || "");
+
+  // 1. Category relevance
+  for (const word of effectiveWords) {
+    if (word.length >= 2 && cat.includes(word)) {
+      score += 60;
+    }
+  }
+
+  // 2. Title begins with primary query word
+  if (effectiveWords[0] && title.startsWith(effectiveWords[0])) {
+    score += 40;
+  }
+
+  // 3. Title contains query words
+  let matchCount = 0;
+  for (const word of effectiveWords) {
+    if (title.includes(word)) {
+      matchCount++;
+      score += 20;
+    }
+  }
+  if (matchCount === effectiveWords.length) {
+    score += 30; // bonus if all words match
+  }
+
+  // 4. Penalize accessories/molds/tools unless user specifically asked for them
+  const penaltyWords = [
+    "قالب", "بند", "قاب", "کاور", "برچسب", "گلس", "محافظ",
+    "پایه", "استند", "واکس", "پاشنه", "کابل", "تبدیل", "شارژر"
+  ];
+  const userWantsAccessory = effectiveWords.some((w) => penaltyWords.includes(w));
+  if (!userWantsAccessory) {
+    for (const pw of penaltyWords) {
+      if (title.includes(pw) || cat.includes(pw)) {
+        score -= 80;
+      }
+    }
+  }
+
+  // 5. Prefer products with active physical shop offers
+  if (row.offer_count > 0) {
+    score += 25;
+  }
+
+  // 6. Valid price
+  if (row.min_price && row.min_price > 0) {
+    score += 10;
+  }
+
+  return score;
+}
 
 export function searchProducts(
   query: string,
@@ -64,10 +125,9 @@ export function searchProducts(
       LEFT JOIN offers o ON p.product_id = o.product_id
       WHERE products_fts MATCH ?
       GROUP BY p.product_id
-      ORDER BY offer_count DESC, min_price ASC
       LIMIT ?
     `;
-    rows = db.prepare(ftsSql).all(tokens, limit * 4) as unknown as RawProductRow[];
+    rows = db.prepare(ftsSql).all(tokens, Math.max(limit * 10, 30)) as unknown as RawProductRow[];
   } catch (err) {
     console.warn("FTS query failed:", err);
   }
@@ -86,16 +146,15 @@ export function searchProducts(
         LEFT JOIN offers o ON p.product_id = o.product_id
         WHERE products_fts MATCH ?
         GROUP BY p.product_id
-        ORDER BY offer_count DESC, min_price ASC
         LIMIT ?
       `;
-      rows = db.prepare(ftsSql).all(orTokens, limit * 4) as unknown as RawProductRow[];
+      rows = db.prepare(ftsSql).all(orTokens, Math.max(limit * 10, 30)) as unknown as RawProductRow[];
     } catch {
       // ignore
     }
   }
 
-  // 2. Fallback to LIKE if FTS gave no results
+  // 3. Fallback to LIKE if FTS gave no results
   if (!rows || rows.length === 0) {
     const likeSql = `
       SELECT p.product_id, p.persian_title, p.brand_name, p.category_name, p.model,
@@ -106,13 +165,12 @@ export function searchProducts(
       LEFT JOIN offers o ON p.product_id = o.product_id
       WHERE p.normalized_title LIKE ?
       GROUP BY p.product_id
-      ORDER BY offer_count DESC, min_price ASC
       LIMIT ?
     `;
-    rows = db.prepare(likeSql).all(`%${normQuery}%`, limit * 2) as unknown as RawProductRow[];
+    rows = db.prepare(likeSql).all(`%${normQuery}%`, limit * 4) as unknown as RawProductRow[];
   }
 
-  // 3. Filter by category & budget in code if provided
+  // 4. Filter by category & budget in code if provided
   let filtered = rows;
   if (category) {
     const normCat = normalizePersian(category);
@@ -121,6 +179,19 @@ export function searchProducts(
   if (maxBudget && maxBudget > 0) {
     filtered = filtered.filter((r) => r.min_price === null || r.min_price <= maxBudget * 1.15); // Allow slight margin for context
   }
+
+  // 5. Intelligent Re-ranking using relevance scoring
+  filtered.sort((a, b) => {
+    const scoreA = scoreProductCandidate(a, effectiveWords);
+    const scoreB = scoreProductCandidate(b, effectiveWords);
+    if (scoreB !== scoreA) {
+      return scoreB - scoreA;
+    }
+    if (b.offer_count !== a.offer_count) {
+      return b.offer_count - a.offer_count;
+    }
+    return (a.min_price || 999999999) - (b.min_price || 999999999);
+  });
 
   filtered = filtered.slice(0, limit);
 
@@ -146,12 +217,17 @@ export function searchProducts(
       parsedSpecs = [];
     }
 
-    // Generate trade-off summary
-    let tradeoff = "گزینه‌ای با ارزش خرید بالا و پشتیبانی مناسب در بازار";
+    // Generate smart contextual summary
+    let tradeoff = `موجود در ${r.offer_count || 1} فروشگاه حضوری تهران با تضمین اصالت`;
+    if (r.category_name) {
+      tradeoff = `رده ${r.category_name}؛ عرضه در ${r.offer_count || 1} فروشگاه فیزیکی تهران`;
+    }
     if (r.persian_title.toLowerCase().includes("r50i")) {
       tradeoff = "طراحی ارگونومیک، شارژدهی بالا تا ۳۰ ساعت و بیس قوی؛ مناسب استفاده روزمره و مکالمه";
     } else if (r.persian_title.toLowerCase().includes("qcy")) {
       tradeoff = "قیمت اقتصادی، حذف نویز فعال (ANC) و بلوتوث نسخه ۵.۳؛ محبوب در رده اقتصادی";
+    } else if (r.persian_title.includes("چرم")) {
+      tradeoff = "چرم طبیعی مرغوب با دوخت صنعتی؛ امکان پرو حضوری و تست سایز در بورس تخصصی تهران";
     } else if (r.persian_title.toLowerCase().includes("samsung") || r.persian_title.includes("سامسونگ")) {
       tradeoff = "کیفیت ساخت ممتاز و گارانتی شرکتی معتبر در مراکز خرید حضوری تهران";
     }
@@ -198,6 +274,15 @@ export function findEligibleOffers(
 ): EligibleOfferResult[] {
   const db = getDatabase();
 
+  // If a product title or partial title was passed instead of product_id, resolve it
+  let targetProductId = productId;
+  if (!targetProductId.startsWith("product_")) {
+    const pRow = db.prepare("SELECT product_id FROM products WHERE persian_title = ? OR persian_title LIKE ? LIMIT 1").get(productId, `%${productId}%`) as { product_id: string } | undefined;
+    if (pRow) {
+      targetProductId = pRow.product_id;
+    }
+  }
+
   let query = `
     SELECT o.offer_id, o.product_id, o.shop_id, o.seller_title, o.price_toman,
            o.last_price_changed_at, o.warranty, o.description,
@@ -207,7 +292,7 @@ export function findEligibleOffers(
     JOIN shops s ON o.shop_id = s.shop_id
     WHERE o.product_id = ? AND o.price_toman IS NOT NULL
   `;
-  const params: (string | number)[] = [productId];
+  const params: (string | number)[] = [targetProductId];
 
   if (torobPayOnly) {
     query += ` AND s.has_torob_pay_in_person = 1 `;
@@ -220,7 +305,7 @@ export function findEligibleOffers(
 
   query += ` ORDER BY o.price_toman ASC `;
 
-  const rows = (db.prepare(query) as any).all(...params) as unknown as Array<{
+  let rows = (db.prepare(query) as any).all(...params) as unknown as Array<{
     offer_id: string;
     product_id: string;
     shop_id: string;
@@ -237,6 +322,27 @@ export function findEligibleOffers(
     has_torob_pay_in_person: number;
     weekly_hours: string | null;
   }>;
+
+  // Zero Dead-End Guarantee:
+  // If torobPayOnly was requested but yielded 0 stores, fallback to all physical stores in Tehran!
+  if (rows.length === 0 && torobPayOnly) {
+    let fallbackQuery = `
+      SELECT o.offer_id, o.product_id, o.shop_id, o.seller_title, o.price_toman,
+             o.last_price_changed_at, o.warranty, o.description,
+             s.name as shop_name, s.location_label, s.address, s.lat, s.lon,
+             s.has_torob_pay_in_person, s.weekly_hours
+      FROM offers o
+      JOIN shops s ON o.shop_id = s.shop_id
+      WHERE o.product_id = ? AND o.price_toman IS NOT NULL
+    `;
+    const fallbackParams: (string | number)[] = [targetProductId];
+    if (maxBudget && maxBudget > 0) {
+      fallbackQuery += ` AND o.price_toman <= ? `;
+      fallbackParams.push(maxBudget);
+    }
+    fallbackQuery += ` ORDER BY o.price_toman ASC `;
+    rows = (db.prepare(fallbackQuery) as any).all(...fallbackParams) as typeof rows;
+  }
 
   const results: EligibleOfferResult[] = [];
 

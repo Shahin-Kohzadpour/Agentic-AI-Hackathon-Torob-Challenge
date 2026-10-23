@@ -5,7 +5,7 @@ export const AGENT_TOOLS: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "ask_clarification",
-      description: "ارائه گزینه‌های تعاملی و چندگزینه‌ای (Generative UI NeedClarification) برای شفاف‌سازی نیاز یا اولویت کاربر بدون نیاز به تایپ دستی",
+      description: "صرفاً زمانی که کاربر هیچ کالایی ذکر نکرده و فقط نام یک برند بسیار عام (مانند فقط «سامسونگ») گفته است. هرگز برای جستجوی اولیه کالا استفاده نکنید و گزینه‌های قیمتی فرضی نسازید.",
       parameters: {
         type: "object",
         properties: {
@@ -32,21 +32,21 @@ export const AGENT_TOOLS: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "search_products",
-      description: "جستجوی محصولات در کاتالوگ جامع ترب و بازگرداندن ۳ مدل برتر همراه با مشخصات و قیمت پایه برای مقایسه",
+      description: "جستجوی محصولات واقعی در کاتالوگ جامع ترب و بازگرداندن ۳ مدل برتر بر اساس موجودی و قیمت واقعی. این ابزار گام اول و اجباری برای هر درخواست خرید کالا (مانند «کفش چرم»، «لپ‌تاپ»، «هندزفری») است.",
       parameters: {
         type: "object",
         properties: {
           query: {
             type: "string",
-            description: "عبارت جستجو، نام مدل یا دسته‌بندی کالا (مثلا هندزفری انکر r50i، گوشی سامسونگ)",
+            description: "عبارت جستجو، نام مدل یا دسته‌بندی کالا (مثلا هندزفری، کفش چرم، لپ‌تاپ)",
           },
           category: {
             type: "string",
-            description: "دسته‌بندی اختیاری (مثلاً هدفون، گوشی موبایل)",
+            description: "دسته‌بندی اختیاری",
           },
           max_budget: {
             type: "number",
-            description: "حداکثر بودجه کاربر به تومان",
+            description: "حداکثر بودجه کاربر به تومان (اختیاری)",
           },
         },
         required: ["query"],
@@ -57,7 +57,7 @@ export const AGENT_TOOLS: ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "find_eligible_offers",
-      description: "یافتن فروشگاه‌های حضوری تهران که محصول انتخاب شده را موجود دارند با فیلتر بودجه، فاصله و ترب‌پی حضوری",
+      description: "یافتن فروشگاه‌های حضوری موجود در تهران برای محصول انتخاب‌شده همراه با زمان رسیدن و ترافیک زنده نشان.",
       parameters: {
         type: "object",
         properties: {

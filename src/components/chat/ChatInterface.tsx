@@ -10,7 +10,6 @@ import StoreResults from "../generative-ui/StoreResults";
 import SellerCheckProgress from "../generative-ui/SellerCheckProgress";
 import VisitPlanCard from "../generative-ui/VisitPlanCard";
 import NoMatchAreaSuggestion from "../generative-ui/NoMatchAreaSuggestion";
-import JudgeDemoPanel from "../demo/JudgeDemoPanel";
 import { UIComponentPayload } from "@/types/generative-ui";
 
 interface Message {
@@ -26,16 +25,17 @@ export default function ChatInterface() {
       id: "m_welcome",
       role: "assistant",
       content:
-        "سلام! برای شروع خرید حضوری در تهران، نوع کالای مورد نظرتان را بفرمایید یا یکی از مسیرهای زیر را انتخاب کنید:",
+        "سلام! برای شروع خرید حضوری در تهران، نام کالا یا مدل مد نظرتان را بفرمایید یا یکی از دسته‌بندی‌های زیر را انتخاب کنید:",
       uiComponent: {
         type: "NeedClarification",
         props: {
-          question: "برای شروع، کدام مسیر خرید حضوری را ترجیح می‌دهید؟",
+          question: "برای شروع، کدام رده کالا را مد نظر دارید؟",
           field: "use_case",
           options: [
-            "برای رفت‌وآمد هندزفری با بودجه ۴٫۲ م‌ت و ترب‌پی در جمهوری می‌خواهم",
-            "کمکم کن با بودجه‌ام بهترین مدل را انتخاب کنم",
-            "لپ‌تاپ‌های موجود در بازار تهران",
+            "کفش و پوشاک در مراکز خرید تهران",
+            "گوشی موبایل و لوازم جانبی",
+            "لپ‌تاپ و تجهیزات دیجیتال",
+            "هدفون و ساعت هوشمند",
           ],
         },
       },
@@ -105,8 +105,16 @@ export default function ChatInterface() {
   };
 
   const handleSelectProduct = async (productId: string, productTitle: string) => {
-    await sendMessage(`مدل «${productTitle}» را انتخاب کردم. فروشگاه‌های حضوری دارای ترب‌پی در تهران را نمایش بده.`);
+    await sendMessage(`مدل «${productTitle}» را انتخاب کردم. فروشگاه‌های حضوری موجود در تهران را نمایش بده.`);
   };
+
+  const [activeCheckContext, setActiveCheckContext] = useState<{
+    offerId: string;
+    shopName: string;
+    sellerTitle: string;
+    priceToman: number;
+    replacementShopName?: string;
+  } | null>(null);
 
   const handleStartSellerCheck = async (
     offerId: string,
@@ -130,6 +138,14 @@ export default function ChatInterface() {
       });
       const job = await resp.json();
 
+      setActiveCheckContext({
+        offerId,
+        shopName,
+        sellerTitle,
+        priceToman,
+        replacementShopName: job.replacement_shop_name,
+      });
+
       const checkMsg: Message = {
         id: `check_${Date.now()}`,
         role: "assistant",
@@ -150,61 +166,23 @@ export default function ChatInterface() {
   };
 
   const handleSelectBackupStore = () => {
-    handleStartSellerCheck(
-      "offer_3c1ad9b2b3081b07991d5872",
-      "آوان آران",
-      "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
-      3850000,
-      true
-    );
+    if (activeCheckContext?.replacementShopName) {
+      handleStartSellerCheck(
+        `backup_${Date.now()}`,
+        activeCheckContext.replacementShopName,
+        activeCheckContext.sellerTitle,
+        activeCheckContext.priceToman,
+        true
+      );
+    }
   };
 
-  const handleGenerateVisitPlan = () => {
-    const visitMsg: Message = {
-      id: `visit_${Date.now()}`,
-      role: "assistant",
-      content: "کارت نهایی مراجعه حضوری صادر شد. قبل از حرکت، جزئیات آدرس و ساعت کاری را بررسی فرمایید:",
-      uiComponent: {
-        type: "VisitPlan",
-        props: {
-          product_title: "هدفون بلوتوثی انکر Soundcore R50i مدل A3949",
-          selected_shop: {
-            shop_id: "shop_60e835a590a4a652ce0ad6d9",
-            shop_name: "فروشگاه آوان آران",
-            location_label: "شیخ هادی / تقاطع حافظ و جمهوری",
-            address: "تهران، خیابان جمهوری، تقاطع حافظ، پاساژ علاءالدین، طبقه ۲، واحد ۲۱",
-            floor_unit: "پاساژ علاءالدین، طبقه ۲، واحد ۲۱",
-            lat: 35.6974,
-            lon: 51.4116,
-            distance_km: 0.8,
-            in_traffic_zone: true,
-            municipality_zone: "11",
-          },
-          confirmed_price_toman: 3850000,
-          warranty: "گارانتی ۶ ماهه شرکتی",
-          working_hours: "امروز تا ساعت ۲۰:۳۰ برقرار است",
-          payment_method: "ترب‌پی حضوری (خرید اقساطی)",
-          verification_badge: "SIMULATED_VERIFIED",
-          live_eta: {
-            duration_minutes: 8,
-            driving_distance_km: 1.1,
-            traffic_summary: "خیابان جمهوری اسلامی",
-            eta_formatted: "۸ دقیقه با ترافیک زنده نشان (۱.۱ کیلومتر)",
-          },
-          pedestrian_eta: {
-            walking_duration_minutes: 10,
-            walking_distance_meters: 820,
-            formatted: "۱۰ دقیقه پیاده‌روی (۸۲۰ متر)",
-          },
-          backup_shop: {
-            shop_name: "مهریسا نوین",
-            location_label: "شیخ هادی",
-            price_toman: 3150000,
-          },
-        },
-      },
-    };
-    setMessages((prev) => [...prev, visitMsg]);
+  const handleGenerateVisitPlan = async () => {
+    if (activeCheckContext) {
+      await sendMessage(
+        `استعلام موجودی «${activeCheckContext.sellerTitle}» از فروشگاه «${activeCheckContext.shopName}» با موفقیت تأیید شد. کارت نهایی مراجعه حضوری و مسیر را نمایش بده.`
+      );
+    }
   };
 
   const resetSession = () => {
@@ -213,16 +191,17 @@ export default function ChatInterface() {
         id: "m_welcome",
         role: "assistant",
         content:
-          "سلام! برای شروع خرید حضوری در تهران، نوع کالای مورد نظرتان را بفرمایید یا یکی از مسیرهای زیر را انتخاب کنید:",
+          "سلام! برای شروع خرید حضوری در تهران، نام کالا یا مدل مد نظرتان را بفرمایید یا یکی از دسته‌بندی‌های زیر را انتخاب کنید:",
         uiComponent: {
           type: "NeedClarification",
           props: {
-            question: "برای شروع، کدام مسیر خرید حضوری را ترجیح می‌دهید؟",
+            question: "برای شروع، کدام رده کالا را مد نظر دارید؟",
             field: "use_case",
             options: [
-              "برای رفت‌وآمد هندزفری با بودجه ۴٫۲ م‌ت و ترب‌پی در جمهوری می‌خواهم",
-              "کمکم کن با بودجه‌ام بهترین مدل را انتخاب کنم",
-              "لپ‌تاپ‌های موجود در بازار تهران",
+              "کفش و پوشاک در مراکز خرید تهران",
+              "گوشی موبایل و لوازم جانبی",
+              "لپ‌تاپ و تجهیزات دیجیتال",
+              "هدفون و ساعت هوشمند",
             ],
           },
         },
@@ -369,9 +348,6 @@ export default function ChatInterface() {
 
         <div ref={chatBottomRef} />
       </div>
-
-      {/* Floating Judge Demo Panel */}
-      <JudgeDemoPanel onTriggerDemoScenario={sendMessage} />
 
       {/* Native App Style Input Bar */}
       <div className="sticky bottom-0 z-40 bg-white border-t border-neutral-200/80 p-2.5 pb-4">

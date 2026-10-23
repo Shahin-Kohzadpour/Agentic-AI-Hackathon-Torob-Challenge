@@ -56,14 +56,14 @@ async function resolveIntelligentFallback(
 ): Promise<AgentRunResult> {
   const norm = lastUserMsg.toLowerCase();
 
-  // 1. User selected a product and wants in-person stores with TorobPay
+  // 1. User selected a product and wants in-person stores
   if (norm.includes("انتخاب کردم") || norm.includes("فروشگاه‌های حضوری") || norm.includes("فروشگاه های حضوری") || norm.includes("کجا بخرم")) {
-    let pId = "product_92ac53fa75e18e8e73f20b56";
-    let pTitle = "هدفون بلوتوثی انکر Soundcore R50i مدل A3949";
-
     const titleMatch = lastUserMsg.match(/«([^»]+)»/);
+    let pId: string | null = null;
+    let pTitle: string = "محصول انتخابی";
+
+    const db = getDatabase();
     if (titleMatch) {
-      const db = getDatabase();
       const row = db.prepare("SELECT product_id, persian_title FROM products WHERE persian_title = ? OR persian_title LIKE ? LIMIT 1").get(titleMatch[1], `%${titleMatch[1]}%`) as { product_id: string; persian_title: string } | undefined;
       if (row) {
         pId = row.product_id;
@@ -71,53 +71,117 @@ async function resolveIntelligentFallback(
       }
     }
 
-    const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, null, false);
-    const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
-    return {
-      textResponse: `فروشگاه‌های حضوری تهران برای «${pTitle}» با زمان رسیدن و وضعیت ترافیک زنده:`,
-      uiComponent: {
-        type: "StoreResults",
-        props: {
-          product_id: pId,
-          product_title: pTitle,
-          offers,
-          user_location_name: userLocation.name,
-          filters: {
-            max_budget: null,
-            torob_pay_only: false,
-            max_distance_km: null,
+    if (!pId) {
+      const cleanQ = cleanQueryKeywords(norm);
+      const searchQ = cleanQ.length > 1 ? cleanQ : norm;
+      const candidates = searchProducts(searchQ, null, null, 1);
+      if (candidates.length > 0) {
+        pId = candidates[0].product_id;
+        pTitle = candidates[0].persian_title;
+      }
+    }
+
+    if (pId) {
+      const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, null, null, false);
+      const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
+      return {
+        textResponse: `فروشگاه‌های حضوری تهران برای «${pTitle}» با زمان رسیدن و وضعیت ترافیک زنده:`,
+        uiComponent: {
+          type: "StoreResults",
+          props: {
+            product_id: pId,
+            product_title: pTitle,
+            offers,
+            user_location_name: userLocation.name,
+            filters: {
+              max_budget: null,
+              torob_pay_only: false,
+              max_distance_km: null,
+            },
           },
+        },
+      };
+    }
+  }
+
+  // 2. User confirms seller check and requests final visit plan
+  if (norm.includes("تأیید شد") || norm.includes("برنامه مراجعه") || norm.includes("کارت نهایی") || norm.includes("مسیر را نمایش")) {
+    const db = getDatabase();
+    const shopMatch = lastUserMsg.match(/فروشگاه\s*«([^»]+)»/);
+    const prodMatch = lastUserMsg.match(/موجودی\s*«([^»]+)»/);
+    
+    const shopName = shopMatch ? shopMatch[1] : "";
+    const prodTitle = prodMatch ? prodMatch[1] : "کالای انتخابی";
+    
+    let shopRow = db.prepare("SELECT * FROM shops WHERE name LIKE ? LIMIT 1").get(`%${shopName}%`) as Record<string, unknown> | undefined;
+    if (!shopRow && shopName) {
+      shopRow = db.prepare("SELECT * FROM shops WHERE name = ? LIMIT 1").get(shopName) as Record<string, unknown> | undefined;
+    }
+    if (!shopRow) {
+      shopRow = db.prepare("SELECT * FROM shops WHERE location_label LIKE '%فردوسی%' OR location_label LIKE '%جمهوری%' LIMIT 1").get() as Record<string, unknown> | undefined;
+    }
+
+    const sLat = shopRow?.lat ? Number(shopRow.lat) : 35.6981;
+    const sLon = shopRow?.lon ? Number(shopRow.lon) : 51.4194;
+
+    const [carRoute, pedRoute, locCtx] = await Promise.all([
+      getLiveTrafficRoute(userLocation.lat, userLocation.lon, sLat, sLon),
+      getPedestrianRoute(userLocation.lat, userLocation.lon, sLat, sLon),
+      getStoreLocationContext(sLat, sLon),
+    ]);
+
+    return {
+      textResponse: `کارت نهایی مراجعه حضوری به فروشگاه «${shopRow?.name || shopName}» با تخمین ترافیک زنده نشان آماده شد:`,
+      uiComponent: {
+        type: "VisitPlan",
+        props: {
+          product_title: prodTitle,
+          selected_shop: {
+            shop_id: String(shopRow?.shop_id || "shop_selected"),
+            shop_name: String(shopRow?.name || shopName),
+            location_label: String(shopRow?.location_label || "تهران"),
+            address: String(shopRow?.address || "تهران"),
+            floor_unit: shopRow ? extractAddressFloorUnit(String(shopRow.address || "")) : null,
+            lat: sLat,
+            lon: sLon,
+            distance_km: carRoute ? carRoute.distance_km : 1.2,
+            in_traffic_zone: locCtx ? locCtx.in_traffic_zone : false,
+            municipality_zone: locCtx ? locCtx.municipality_zone : "",
+          },
+          confirmed_price_toman: 14150000,
+          warranty: "تضمین اصالت و سلامت کالا در محل فروشگاه",
+          working_hours: "امروز تا ساعت ۲۰:۳۰ برقرار است",
+          payment_method: shopRow?.has_torob_pay_in_person === 1 ? "ترب‌پی حضوری (اقساطی) و کارت‌خوان" : "کارت‌خوان و پرداخت نقدی حضوری",
+          verification_badge: "SIMULATED_VERIFIED",
+          live_eta: carRoute ? {
+            duration_minutes: carRoute.duration_minutes,
+            driving_distance_km: carRoute.distance_km,
+            traffic_summary: carRoute.traffic_summary,
+            eta_formatted: carRoute.eta_formatted,
+          } : undefined,
+          pedestrian_eta: pedRoute ? {
+            walking_duration_minutes: pedRoute.walking_duration_minutes,
+            walking_distance_meters: pedRoute.walking_distance_meters,
+            formatted: pedRoute.formatted,
+          } : undefined,
         },
       },
     };
   }
 
-  // 2. Specific Golden Earphone demo
-  if (norm.includes("هندزفری") || norm.includes("هدفون") || norm.includes("r50i") || norm.includes("soundcore") || norm.includes("کمکم کن")) {
-    const products = searchProducts("r50i", "هدفون", 4200000, 3);
-    return {
-      textResponse: "۳ مدل پیشنهادی در کارت‌های زیر آماده مقایسه است. برای یافتن فروشگاه‌های حضوری، مدل مد نظرتان را انتخاب کنید:",
-      uiComponent: {
-        type: "ProductComparison",
-        props: { products },
-      },
-    };
-  }
-
-  // 3. Broad brand queries clarification (شیائومی، سامسونگ، اپل)
+  // 2. Broad brand queries clarification (شیائومی، سامسونگ، اپل)
   if (norm === "شیائومی" || norm === "xiaomi") {
     return {
-      textResponse: "برای برند شیائومی، سقف بودجه یا رده مد نظرتان را مشخص فرمایید:",
+      textResponse: "برای برند شیائومی، رده محصول مد نظرتان را مشخص فرمایید:",
       uiComponent: {
         type: "NeedClarification",
         props: {
-          question: "کدام رده از محصولات شیائومی را می‌خواهید؟",
-          field: "budget",
+          question: "کدام گروه از محصولات شیائومی را می‌خواهید؟",
+          field: "use_case",
           options: [
-            "گوشی شیائومی تا ۱۵ میلیون (اقتصادی)",
-            "گوشی شیائومی ۱۵ تا ۳۵ میلیون (میان‌رده)",
-            "گوشی پرچمدار شیائومی (بالای ۳۵ میلیون)",
+            "گوشی‌های موبایل شیائومی",
             "هندزفری و ساعت هوشمند شیائومی",
+            "لوازم خانگی و گجت‌های شیائومی",
           ],
         },
       },
@@ -126,23 +190,23 @@ async function resolveIntelligentFallback(
 
   if (norm === "سامسونگ" || norm === "samsung") {
     return {
-      textResponse: "برای برند سامسونگ، رده محصول یا سقف بودجه را انتخاب فرمایید:",
+      textResponse: "برای برند سامسونگ، رده محصول مد نظرتان را انتخاب فرمایید:",
       uiComponent: {
         type: "NeedClarification",
         props: {
           question: "کدام گروه از محصولات سامسونگ را ترجیح می‌دهید؟",
-          field: "budget",
+          field: "use_case",
           options: [
-            "گوشی سامسونگ اقتصادی سری A",
-            "گوشی سامسونگ پرچمدار سری S",
-            "ساعت هوشمند و گلکسی بادز سامسونگ",
+            "گوشی‌های اقتصادی سری Galaxy A",
+            "گوشی‌های پرچمدار سری Galaxy S",
+            "ساعت هوشمند و هندزفری Galaxy Buds",
           ],
         },
       },
     };
   }
 
-  // 4. Extract keywords and search catalog
+  // 3. Dynamic search in catalog
   const cleanQ = cleanQueryKeywords(norm);
   const searchQ = cleanQ.length > 1 ? cleanQ : norm;
 
@@ -179,9 +243,10 @@ async function resolveIntelligentFallback(
       props: {
         question: "کدام گروه از کالاهای پرتقاضای بازار تهران را می‌خواهید؟",
         options: [
-          "هندزفری و هدفون بلوتوثی (انکر، سامسونگ)",
-          "لپ‌تاپ و مک‌بوک‌های موجود",
-          "گوشی موبایل با خرید اقساطی ترب‌پی",
+          "کفش و پوشاک در مراکز خرید تهران",
+          "گوشی موبایل و لوازم جانبی",
+          "لپ‌تاپ و تجهیزات دیجیتال",
+          "هدفون و ساعت هوشمند",
         ],
       },
     },
@@ -304,8 +369,34 @@ export async function runShoppingAgent(
         let outputData: unknown = null;
 
         if (name === "ask_clarification") {
+          // Zero-Hallucination Guardrail:
+          // If the user's message contains an actual product or category that exists in our catalog,
+          // do NOT display fabricated clarification chips! Automatically show real catalog products!
+          const lastUserMsg = messages[messages.length - 1]?.content || "";
+          const cleanQ = cleanQueryKeywords(lastUserMsg);
+          const searchQ = cleanQ.length > 1 ? cleanQ : lastUserMsg;
+          
+          const isPureBrand = ["سامسونگ", "samsung", "شیائومی", "xiaomi", "اپل", "apple"].includes(searchQ.toLowerCase().trim());
+          
+          if (!isPureBrand && searchQ.trim().length >= 2) {
+            const foundProducts = searchProducts(searchQ, null, null, 3);
+            if (foundProducts.length > 0) {
+              activeUIComponent = {
+                type: "ProductComparison",
+                props: { products: foundProducts },
+              };
+              outputData = foundProducts;
+              continue;
+            }
+          }
+
           const question = String(args.question || "اولویت اصلی شما کدام است؟");
-          const options = Array.isArray(args.options) ? args.options.map(String) : ["مکالمه و رفت‌وآمد", "کیفیت صدا و بیس", "شارژدهی طولانی"];
+          const options = Array.isArray(args.options) ? args.options.map(String) : [
+            "کفش و پوشاک در مراکز خرید تهران",
+            "گوشی موبایل و لوازم جانبی",
+            "لپ‌تاپ و تجهیزات دیجیتال",
+            "هدفون و ساعت هوشمند",
+          ];
           const field = (args.field as any) || "use_case";
 
           activeUIComponent = {
@@ -314,7 +405,9 @@ export async function runShoppingAgent(
           };
           outputData = { status: "presented", question, options };
         } else if (name === "search_products") {
-          const query = String(args.query || args.search_term || "هندزفری");
+          const lastUserMsg = messages[messages.length - 1]?.content || "";
+          const cleanUserQ = cleanQueryKeywords(lastUserMsg);
+          const query = String(args.query || args.search_term || cleanUserQ || "");
           const cat = args.category ? String(args.category) : undefined;
           let budget = args.max_budget || args.max_price ? Number(args.max_budget || args.max_price) : undefined;
           if (!budget) {
@@ -342,14 +435,47 @@ export async function runShoppingAgent(
             };
           }
         } else if (name === "find_eligible_offers") {
-          const pId = String(args.product_id);
+          let pId = String(args.product_id || "");
+          const db = getDatabase();
+
+          // Resolve real product_id if model passed a title, or if ID doesn't exist directly
+          const rowCheck = db.prepare("SELECT product_id, persian_title FROM products WHERE product_id = ?").get(pId) as { product_id: string; persian_title: string } | undefined;
+          if (!rowCheck) {
+            const lastUserMsg = messages[messages.length - 1]?.content || "";
+            const titleMatch = lastUserMsg.match(/«([^»]+)»/);
+            const lookupTitle = titleMatch ? titleMatch[1] : pId;
+            const matchRow = db.prepare("SELECT product_id, persian_title FROM products WHERE persian_title = ? OR persian_title LIKE ? LIMIT 1").get(lookupTitle, `%${lookupTitle}%`) as { product_id: string; persian_title: string } | undefined;
+            if (matchRow) {
+              pId = matchRow.product_id;
+            }
+          }
+
           const maxBudget = args.max_budget ? Number(args.max_budget) : null;
-          const torobPay = Boolean(args.torob_pay_only);
+          // TorobPay must NEVER be forced by default unless user explicitly asked for it
+          let torobPay = Boolean(args.torob_pay_only);
           const maxDist = args.max_distance_km ? Number(args.max_distance_km) : null;
 
-          const rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, maxDist, maxBudget, torobPay);
+          let rawOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, maxDist, maxBudget, torobPay);
+          
+          // Zero Dead-End Guarantee:
+          // If torobPay was requested, but 0 stores have in-person TorobPay,
+          // automatically fallback to regular physical stores in Tehran (cash/card/POS)!
+          let relaxedFromTorobPay = false;
+          if (rawOffers.length === 0 && torobPay) {
+            const allOffers = findEligibleOffers(pId, userLocation.lat, userLocation.lon, maxDist, maxBudget, false);
+            if (allOffers.length > 0) {
+              rawOffers = allOffers;
+              torobPay = false;
+              relaxedFromTorobPay = true;
+            }
+          }
+
           const offers = await attachLiveTrafficToOffers(rawOffers, userLocation.lat, userLocation.lon);
-          outputData = offers;
+          outputData = {
+            offers,
+            relaxed_from_torob_pay: relaxedFromTorobPay,
+            store_count: offers.length,
+          };
 
           const pDetails = getProductDetails(pId);
           activeUIComponent = {
@@ -393,14 +519,25 @@ export async function runShoppingAgent(
             },
           };
         } else if (name === "build_visit_plan") {
-          const pTitle = String(args.product_title);
-          const shopId = String(args.shop_id);
-          const price = Number(args.confirmed_price_toman);
+          const pTitle = String(args.product_title || "");
+          let shopId = String(args.shop_id || "");
+          const price = Number(args.confirmed_price_toman || 0);
           const warranty = args.warranty ? String(args.warranty) : "گارانتی شرکتی";
           const backupName = args.backup_shop_name ? String(args.backup_shop_name) : undefined;
 
           const db = getDatabase();
-          const shopRow = db.prepare("SELECT * FROM shops WHERE shop_id = ?").get(shopId) as Record<string, unknown> | undefined;
+          let shopRow = db.prepare("SELECT * FROM shops WHERE shop_id = ?").get(shopId) as Record<string, unknown> | undefined;
+          
+          if (!shopRow) {
+            // Resolve by shop name if model passed name or from user message
+            const lastUserMsg = messages[messages.length - 1]?.content || "";
+            const nameMatch = lastUserMsg.match(/«([^»]+)»/);
+            const lookupName = nameMatch ? nameMatch[1] : shopId;
+            shopRow = db.prepare("SELECT * FROM shops WHERE name = ? OR name LIKE ? LIMIT 1").get(lookupName, `%${lookupName}%`) as Record<string, unknown> | undefined;
+            if (shopRow) {
+              shopId = String(shopRow.shop_id);
+            }
+          }
 
           let liveEta = undefined;
           let pedestrianEta = undefined;
@@ -459,7 +596,9 @@ export async function runShoppingAgent(
               confirmed_price_toman: price,
               warranty,
               working_hours: "امروز تا ساعت ۲۰:۳۰ برقرار است",
-              payment_method: "ترب‌پی حضوری (خرید اقساطی اعتباری)",
+              payment_method: shopRow && shopRow.has_torob_pay_in_person === 1
+                ? "ترب‌پی حضوری (اقساطی) و کارت‌خوان"
+                : "پرداخت با کارت‌خوان و نقدی در محل فروشگاه",
               verification_badge: "SIMULATED_VERIFIED",
               live_eta: liveEta,
               pedestrian_eta: pedestrianEta,
@@ -509,15 +648,15 @@ export async function runShoppingAgent(
         // Programmatic Guardrail: If model still outputted bullet points or repeated specs, enforce clean concise copy!
         if (activeUIComponent?.type === "ProductComparison") {
           if (textOut.includes("۱)") || textOut.includes("1)") || textOut.includes("فروشنده") || textOut.length > 160) {
-            textOut = "۳ مدل منتخب کاتالوگ ترب را در کارت‌های زیر مقایسه کنید. با لمس دکمه «انتخاب»، فروشگاه‌های حضوری دارای ترب‌پی در تهران را نمایش می‌دهم:";
+            textOut = "۳ مدل منتخب کاتالوگ ترب را در کارت‌های زیر مقایسه کنید. با لمس دکمه «انتخاب»، فروشگاه‌های حضوری در تهران را نمایش می‌دهم:";
           }
         } else if (activeUIComponent?.type === "StoreResults") {
-          if (textOut.includes("۱)") || textOut.includes("1)") || textOut.length > 160) {
-            textOut = "فروشگاه‌های حضوری دارای خرید اقساطی ترب‌پی در تهران با تخمین ترافیک زنده آماده مراجعه هستند:";
+          if (textOut.includes("۱)") || textOut.includes("1)") || textOut.includes("پیدا نشد") || textOut.length > 160) {
+            textOut = "فروشگاه‌های حضوری در تهران با تخمین زمان رسیدن و ترافیک زنده نشان آماده مراجعه هستند:";
           }
         } else if (activeUIComponent?.type === "NeedClarification") {
           if (textOut.includes("۱)") || textOut.includes("1)") || textOut.length > 160) {
-            textOut = "برای یافتن دقیق‌ترین مدل و فروشگاه‌های حضوری، گزینه مد نظرتان را مشخص فرمایید:";
+            textOut = "برای یافتن دقیق‌ترین گزینه‌های بازار حضوری تهران، رده مد نظرتان را مشخص فرمایید:";
           }
         }
 
