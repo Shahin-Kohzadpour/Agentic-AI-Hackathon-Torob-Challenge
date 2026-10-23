@@ -1,0 +1,9 @@
+{
+  "app_commit": "2652492",
+  "release": "kavoshgaran-2026-10-23-r6-location",
+  "command": "node --require ./scripts/register-ts.cjs --test --test-reporter=dot tests/*.test.cjs",
+  "tests": 59,
+  "passed": 59,
+  "failed": 0,
+  "scope": "Real service source and full catalogue; offline intent extractor; temporary workflow databases; no physical GPS or seller contact claim."
+}

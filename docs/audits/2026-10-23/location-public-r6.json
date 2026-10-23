@@ -1,0 +1,25 @@
+{
+  "at": "2026-10-23T18:08:51Z",
+  "url": "https://kavoshgaran.liara.run",
+  "geolocation": "controlled browser positions and permission failures; not a physical GPS test",
+  "gps_explicit_choice_and_persistence": true,
+  "map_tiles_loaded": true,
+  "manual_selection_replaces_origin_without_gps": true,
+  "denied_gps_manual_recovery": true,
+  "late_gps_cannot_override_manual_choice": true,
+  "outside_tehran_is_rejected": true,
+  "customer_copy_on_loaded_conversation": true,
+  "page_errors": [],
+  "health": {
+    "status": "ready",
+    "catalogue": "available",
+    "counts": {
+      "shops": 6476,
+      "products": 225903,
+      "offers": 331506
+    },
+    "workflow": "persistent",
+    "release": "kavoshgaran-2026-10-23-r6-location",
+    "at": "2026-10-23T18:09:35.695Z"
+  }
+}
