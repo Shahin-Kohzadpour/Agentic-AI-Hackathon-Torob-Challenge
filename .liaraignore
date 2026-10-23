@@ -2,7 +2,7 @@ node_modules
 .next
 .git
 .env*
-data
+/data
 scratch
 docs
 tests

@@ -4,7 +4,7 @@ node_modules
 .gitignore
 *.log
 docs
-data
+/data
 scratch
 tests
 .env*
