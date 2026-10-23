@@ -1,0 +1,15 @@
+{
+  "app": "kavoshgaran",
+  "team-id": "6accf9ba0841df6d77589e99",
+  "platform": "docker",
+  "port": 3000,
+  "disks": [
+    {
+      "name": "catalogue",
+      "mountTo": "/app/data"
+    }
+  ],
+  "build": {
+    "dockerfile": "Dockerfile"
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "shops": 6476,
+  "products": 225903,
+  "offers": 331506,
+  "missing_prices": 15083,
+  "nonpositive_prices": 0,
+  "duplicate_pairs": 20315,
+  "shops_with_offers": 3792,
+  "products_with_offers": 225903,
+  "foreign_key_errors": 0,
+  "torob_pay_in_person": 50,
+  "max_distinct_products_shop": 300,
+  "any_in_person_payment": 82,
+  "candidate_products": 15,
+  "candidate_offers_checked": 369,
+  "candidate_mismatches": [],
+  "demo_specs": [
+    {
+      "key": "رنگ",
+      "section": "مشخصات کلی",
+      "value": "سرمه ای, سفید, مشکی"
+    },
+    {
+      "key": "برند",
+      "section": "مشخصات کلی",
+      "value": "انکر"
+    },
+    {
+      "key": "مدل",
+      "section": "مشخصات کلی",
+      "value": "R50i"
+    },
+    {
+      "key": "وزن ایرفون به همراه کیس",
+      "section": "مشخصات کلی",
+      "value": "60گرم"
+    },
+    {
+      "key": "نوع اتصال",
+      "section": "مشخصات کلی",
+      "value": "بی سیم"
+    },
+    {
+      "key": "نسخه بلوتوث",
+      "section": "مشخصات کلی",
+      "value": "5.3"
+    },
+    {
+      "key": "پورت USB",
+      "section": "مشخصات کلی",
+      "value": "ندارد"
+    },
+    {
+      "key": "محدوده عملکرد",
+      "section": "مشخصات کلی",
+      "value": "10متر"
+    },
+    {
+      "key": "نوع باتری",
+      "section": "مشخصات کلی",
+      "value": "لیتیوم پلیمری"
+    },
+    {
+      "key": "شارژدهی ایرفون",
+      "section": "مشخصات کلی",
+      "value": "10ساعت"
+    },
+    {
+      "key": "شارژدهی کیس",
+      "section": "مشخصات کلی",
+      "value": "20ساعت"
+    },
+    {
+      "key": "مدت زمان استفاده در حالت مکالمه",
+      "section": "مشخصات کلی",
+      "value": "10ساعت"
+    },
+    {
+      "key": "مدت زمان شارژ شدن",
+      "section": "مشخصات کلی",
+      "value": "2ساعت"
+    },
+    {
+      "key": "مدت زمان استفاده در حالت موسیقی",
+      "section": "مشخصات کلی",
+      "value": "10ساعت"
+    },
+    {
+      "key": "طریقه شارژ",
+      "section": "مشخصات کلی",
+      "value": "درگاه USB-C"
+    },
+    {
+      "key": "استاندارد IPX5",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "مقاومت در برابر ضربه",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "مقاومت دربرابر خش",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "طراحی زیبا و شیک",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "طراحی ارگونومیک",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "میکروفن",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "noise cancelling microphone",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "نشانگر LED",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "جنس بدنه",
+      "section": "مشخصات کلی",
+      "value": "پلاستیک فشرده ABS"
+    },
+    {
+      "key": "خروجی صدای بسیار با کیفیت",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "وضوح صدای بالا",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "تفکیک صدای عالی",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "قطر درایور",
+      "section": "مشخصات کلی",
+      "value": "10میلی متر"
+    },
+    {
+      "key": "تعداد میکروفن",
+      "section": "مشخصات کلی",
+      "value": "2 میکروفن"
+    },
+    {
+      "key": "پشتیبانی از کد AAC,SBC",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "قابلیت شارژ سریع",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "پشتیبانی شارژ بی سیم",
+      "section": "مشخصات کلی",
+      "value": "ندارد"
+    },
+    {
+      "key": "دستیار صوتی",
+      "section": "مشخصات کلی",
+      "value": "ندارد"
+    },
+    {
+      "key": "قابلیت پخش و توقف موسیقی",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "قابلیت رد و پاسخ به تماس",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "کیس شارژ آهنربایی",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "بند آویز",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "سازگار با",
+      "section": "مشخصات کلی",
+      "value": "Android-ios"
+    },
+    {
+      "key": "کابل شارژ",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "سری اضافه",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    },
+    {
+      "key": "قابلیت حذف نویز (ANC)",
+      "section": "مشخصات کلی",
+      "value": "ندارد"
+    },
+    {
+      "key": "پشتیبانی از فناوری (ENC)",
+      "section": "مشخصات کلی",
+      "value": "دارد"
+    }
+  ],
+  "demo_shop": {
+    "weekly_hours": "{\"fri\":{\"shifts\":[{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"closed\"},\"mon\":{\"shifts\":[{\"end_time\":\"20:30:00\",\"start_time\":\"09:30:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"declared\"},\"sat\":{\"shifts\":[{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"closed\"},\"sun\":{\"shifts\":[{\"end_time\":\"20:30:00\",\"start_time\":\"09:30:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"declared\"},\"thu\":{\"shifts\":[{\"end_time\":\"20:30:00\",\"start_time\":\"09:30:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"declared\"},\"tue\":{\"shifts\":[{\"end_time\":\"20:30:00\",\"start_time\":\"09:30:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"declared\"},\"wed\":{\"shifts\":[{\"end_time\":\"20:30:00\",\"start_time\":\"09:30:00\"},{\"end_time\":\"00:00:00\",\"start_time\":\"00:00:00\"}],\"status\":\"declared\"}}",
+    "payment_options": "[{\"category_names\":[],\"channel\":\"in_person\",\"max_price_toman\":null,\"min_price_toman\":null,\"provider_name\":\"تارا\"},{\"category_names\":[],\"channel\":\"in_person\",\"max_price_toman\":null,\"min_price_toman\":null,\"provider_name\":\"اسنپ‌پی\"},{\"category_names\":[],\"channel\":\"in_person\",\"max_price_toman\":null,\"min_price_toman\":null,\"provider_name\":\"دیجی پی\"},{\"category_names\":[],\"channel\":\"in_person\",\"max_price_toman\":null,\"min_price_toman\":null,\"provider_name\":\"ترب‌پی\"}]"
+  }
+}

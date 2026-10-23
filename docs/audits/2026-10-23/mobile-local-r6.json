@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-23T17:56:40Z",
+  "url": "http://127.0.0.1:3109",
+  "forced_origin_ip": null,
+  "device": "iPhone 13 emulation, touch-enabled Chromium; not physical iOS Safari",
+  "initial_result_seconds": 0.41,
+  "reload_preserves_visit": true,
+  "editing_preferences_recalculates": true,
+  "viewports": [
+    {
+      "width": 320,
+      "document": 320,
+      "height": 700
+    },
+    {
+      "width": 360,
+      "document": 360,
+      "height": 780
+    },
+    {
+      "width": 390,
+      "document": 390,
+      "height": 844
+    },
+    {
+      "width": 430,
+      "document": 430,
+      "height": 932
+    },
+    {
+      "width": 390,
+      "document": 390,
+      "height": 480
+    }
+  ],
+  "short_viewport_input_accessible": true,
+  "composer_touch_targets_44px": true,
+  "session_isolation": true,
+  "page_errors": [],
+  "health": {
+    "status": "ready",
+    "catalogue": "available",
+    "counts": {
+      "shops": 6476,
+      "products": 225903,
+      "offers": 331506
+    },
+    "workflow": "persistent",
+    "release": "kavoshgaran-2026-10-23-r6-location",
+    "at": "2026-10-23T17:56:55.704Z"
+  }
+}

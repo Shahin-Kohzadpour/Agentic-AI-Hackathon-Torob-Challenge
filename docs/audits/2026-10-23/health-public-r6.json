@@ -1,0 +1,15 @@
+{
+  "stable_responses": 3,
+  "health": {
+    "status": "ready",
+    "catalogue": "available",
+    "counts": {
+      "shops": 6476,
+      "products": 225903,
+      "offers": 331506
+    },
+    "workflow": "persistent",
+    "release": "kavoshgaran-2026-10-23-r6-location",
+    "at": "2026-10-23T18:08:12.653Z"
+  }
+}

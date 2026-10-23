@@ -1,0 +1,20 @@
+{
+  "decoder_exit": 0,
+  "duration_line": "Duration: 00:05:01.28, start: 0.000000, bitrate: 309 kb/s",
+  "video_stream": "Stream #0:0[0x1](und): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt470bg/unknown/unknown, progressive), 780x1688 [SAR 1:1 DAR 195:422], 232 kb/s, 25 fps, 25 tbr, 12800 tbn (default)",
+  "audio_stream": "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 24000 Hz, mono, fltp, 71 kb/s (default)",
+  "mean_volume": "-24.2 dB",
+  "max_volume": "-5.5 dB",
+  "playback": {
+    "duration": 301.28,
+    "width": 780,
+    "height": 1688,
+    "currentTime": 2.640573,
+    "paused": false,
+    "muted": false,
+    "error": null,
+    "readyState": 4,
+    "audioDecodedBytes": 16104
+  },
+  "bytes": 11653966
+}

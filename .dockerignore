@@ -4,3 +4,11 @@ node_modules
 .gitignore
 *.log
 docs
+/data
+scratch
+tests
+.env*
+!.env.example
+tsconfig.tsbuildinfo
+test-results
+playwright-report

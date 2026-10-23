@@ -1,0 +1,17 @@
+{
+  "base_url": "https://kavoshgaran.liara.run",
+  "mode": "real application API; external services may degrade with explicit fallback",
+  "forced_origin_ip": "185.142.159.118",
+  "initial_result_seconds": 4.37,
+  "reload_preserves_visit": true,
+  "mobile_width": {
+    "viewport": 390,
+    "document": 390
+  },
+  "health_status": 200,
+  "forged_legacy_api_status": 400,
+  "final_offer_id": "offer_3c1ad9b2b3081b07991d5872",
+  "final_observed_price": 3850000,
+  "session_isolation": true,
+  "page_errors": []
+}

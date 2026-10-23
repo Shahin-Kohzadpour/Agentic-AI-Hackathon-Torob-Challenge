@@ -1,0 +1,53 @@
+{
+  "scope": "Production UI with intercepted chat responses from real services; actual local seller-check API. No live LLM/Neshan validation.",
+  "initial_buttons": [
+    "",
+    "«کمکم کن انتخاب کنم»پیشنهاد ۳ مدل برتر متناسب با بودجه و نیاز شما🎯",
+    "«مدلم را می‌دانم»استعلام قیمت و موجودی مدل مدنظر در فروشگاه‌های تهران🔍",
+    "کفش و پوشاک در مراکز خرید تهران",
+    "گوشی موبایل و لوازم جانبی",
+    "لپ‌تاپ و تجهیزات دیجیتال",
+    "هدفون و ساعت هوشمند",
+    "",
+    "",
+    ""
+  ],
+  "mobile_initial": {
+    "width": 390,
+    "scrollWidth": 390,
+    "dir": "rtl"
+  },
+  "comparison_table": "مدل\tقیمت پایه\tفروشنده\tمزیت اصلی\n\nهندزفری بلوتوثی انکر مدل Soundcore R50i NC A3959\n۴٬۰۷۹٬۶۰۰ تومان\t23 فروشگاه\tطراحی ارگونومیک، شارژدهی بالا تا ۳۰...\n\nهندزفری بلوتوثی انکر مدل Soundcore R50i NC A3959\n۲٬۱۹۰٬۰۰۰ تومان\t17 فروشگاه\tطراحی ارگونومیک، شارژدهی بالا تا ۳۰...\n\nهدفون بلوتوثی انکر Soundcore R50i مدل A3949\n۳٬۴۲۸٬۹۰۰ تومان\t11 فروشگاه\tطراحی ارگونومیک، شارژدهی بالا تا ۳۰...",
+  "mobile_stores": {
+    "width": 390,
+    "scrollWidth": 390
+  },
+  "backup_request": {
+    "offerId": "backup_1792752784365",
+    "shopName": "آوان آران (شیخ هادی)",
+    "sellerTitle": "ایرپاد انکر r50i",
+    "priceToman": 3150000,
+    "isBackup": true
+  },
+  "visit_claim": "موجودی و قیمت قطعی تأیید شد",
+  "visit_explicit_simulation_in_card": false,
+  "refresh_loses_visit": true,
+  "slide_recognized_as_product": "Anker Soundcore R50i A3949",
+  "unsupported_voice_fabricated_transcript": "برای رفت‌وآمد هندزفری می‌خواهم، بودجه‌ام چهار میلیون و دویست هزار تومان است و ترب‌پی حضوری می‌خواهم",
+  "desktop": {
+    "width": 1440,
+    "scrollWidth": 1440,
+    "appWidth": 440
+  },
+  "page_errors": [],
+  "actual_search_api_titles": [
+    "هندزفری بلوتوثی انکر مدل Soundcore R50i NC A3959",
+    "هندزفری بلوتوثی انکر مدل Soundcore R50i NC A3959",
+    "هدفون بلوتوثی انکر Soundcore R50i مدل A3949"
+  ],
+  "actual_api_accepts_invalid_offer": {
+    "offer_id": "nonexistent_audit_offer",
+    "status": "AVAILABLE",
+    "observed_price": 123
+  }
+}

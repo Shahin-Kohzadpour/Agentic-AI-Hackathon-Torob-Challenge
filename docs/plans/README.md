@@ -4,6 +4,8 @@ Strategy and implementation plans for the Torob in-person shopping assistant cha
 
 Start with the [Persian overview](START-HERE-fa.md).
 
+For the current implementation, use the [score-prioritized continuation roadmap](ROADMAP-MAX-SCORE-fa.md), [execution backlog](EXECUTION-BACKLOG-fa.md), and [acceptance matrix](ACCEPTANCE-MAX-SCORE-fa.md). These incorporate the [implementation audit](../audits/2026-10-23/IMPLEMENTATION-AUDIT-fa.md), the confirmed 23 October 2026 21:00 Asia/Tehran deadline, Codex development with one human supervisor, and Liara hosting.
+
 | File | Contents |
 |---|---|
 | [WINNING-PLAN.md](WINNING-PLAN.md) | Scope, judging criteria, architecture, schedule, release gates and demo script |
@@ -17,4 +19,4 @@ Start with the [Persian overview](START-HERE-fa.md).
 
 The dataset ZIP is not included. To reproduce the audit, set `ARCHIVE` in `profile_dataset.py` to your local copy and run `python profile_dataset.py`. The script writes its JSON outputs beside itself.
 
-These are planning artifacts. Application implementation, deployment, acceptance tests and submission remain future work. Seller contact simulations must stay explicitly labelled. The schedule assumes 48 hours; the actual deadline/team size were not supplied.
+The original documents describe the planning baseline, not current implementation status. Application code now exists; the audit distinguishes verified behavior from gaps. The continuation roadmap supersedes the original assumed 48-hour schedule. Seller contact simulations must stay explicitly labelled. No proposed task or acceptance case is a claim of completion.

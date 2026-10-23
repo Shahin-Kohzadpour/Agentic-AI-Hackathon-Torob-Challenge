@@ -1,144 +1,55 @@
 "use client";
-
-import React, { useEffect, useRef } from "react";
+import {useEffect,useRef} from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-export interface MapStorePin {
-  id: string;
-  name: string;
-  lat: number;
-  lon: number;
-  price_toman: number;
-  location_label?: string | null;
-  isSelected?: boolean;
-}
-
-interface StoreMapProps {
-  userLocation: { lat: number; lon: number; name: string };
-  stores: MapStorePin[];
-  onSelectStore?: (storeId: string) => void;
-  className?: string;
-}
-
-export default function StoreMap({
-  userLocation,
-  stores,
-  onSelectStore,
-  className = "h-64 w-full rounded-2xl overflow-hidden shadow-inner border border-gray-200",
-}: StoreMapProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<L.LayerGroup | null>(null);
-
-  useEffect(() => {
-    if (!mapContainerRef.current) return;
-
-    if (!mapRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [userLocation.lat, userLocation.lon],
-        zoom: 14,
-        zoomControl: false,
-      });
-
-      L.control.zoom({ position: "bottomright" }).addTo(map);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://openstreetmap.org">OSM</a>',
-        maxZoom: 19,
-      }).addTo(map);
-
-      markersRef.current = L.layerGroup().addTo(map);
-      mapRef.current = map;
-    }
-
-    const map = mapRef.current;
-    const markers = markersRef.current;
-    if (!map || !markers) return;
-
+const escape=(value:string)=>value.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!));
+export interface MapStorePin {id:string;name:string;lat:number;lon:number;price_toman:number|null;location_label?:string|null;isSelected?:boolean;kind?:"shop"|"area"}
+export default function StoreMap({userLocation,stores,onSelectStore,className="store-map"}:{userLocation:{lat:number;lon:number;name:string};stores:MapStorePin[];onSelectStore?:(id:string)=>void;className?:string}) {
+  const container=useRef<HTMLDivElement>(null),mapRef=useRef<L.Map|null>(null),layer=useRef<L.LayerGroup|null>(null),boundsKey=useRef("");
+  const callback=useRef(onSelectStore);callback.current=onSelectStore;
+  const initial=useRef(userLocation);
+  useEffect(()=>{
+    if(!container.current)return;let disposed=false;
+    const map=L.map(container.current,{center:[initial.current.lat,initial.current.lon],zoom:14,zoomControl:false,inertia:false,zoomAnimation:false});
+    mapRef.current=map;layer.current=L.layerGroup().addTo(map);L.control.zoom({position:"bottomleft"}).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+    const resize=new ResizeObserver(()=>{if(!disposed)map.invalidateSize()});resize.observe(container.current);
+    return()=>{disposed=true;resize.disconnect();map.stop();map.remove();mapRef.current=null;layer.current=null;boundsKey.current=""};
+  },[]);
+  const key=JSON.stringify({userLocation,stores});
+  useEffect(()=>{
+    const map=mapRef.current,markers=layer.current;if(!map||!markers)return;
+    const current: {userLocation:typeof userLocation;stores:MapStorePin[]}=JSON.parse(key);
     markers.clearLayers();
-
-    // Custom user icon (Blue pulse)
-    const userIcon = L.divIcon({
-      className: "custom-user-marker",
-      html: `
-        <div style="background-color: #2563eb; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(37,99,235,0.6); animation: pulse 2s infinite;"></div>
-      `,
-      iconSize: [18, 18],
-      iconAnchor: [9, 9],
+    const pinMarkers:Array<{marker:L.Marker;pin:MapStorePin}>=[];
+    L.marker([current.userLocation.lat,current.userLocation.lon],{icon:L.divIcon({className:"user-map-pin",html:'<span></span>',iconSize:[22,22],iconAnchor:[11,11]})}).bindPopup(`مبدأ: ${escape(current.userLocation.name)}`).addTo(markers);
+    current.stores.forEach((pin,index)=>{
+      const marker=L.marker([pin.lat,pin.lon],{title:pin.name,alt:pin.name,icon:L.divIcon({className:`decision-map-pin ${pin.kind==="area"?"hub-pin":"shop-pin"} ${pin.isSelected?"active":""}`,html:`<span>${pin.kind==="area"?"◆":String(index+1).replace(/\d/g,c=>"۰۱۲۳۴۵۶۷۸۹"[Number(c)])}</span>`,iconSize:[44,44],iconAnchor:[22,22]})}).addTo(markers);
+      pinMarkers.push({marker,pin});
+      marker.bindTooltip(escape(pin.name),{direction:"top"});marker.on("click",()=>callback.current?.(pin.id));
+      if(pin.isSelected)L.polyline([[current.userLocation.lat,current.userLocation.lon],[pin.lat,pin.lon]],{color:pin.kind==="area"?"#176e72":"#d32f2f",weight:2,dashArray:"4,7"}).addTo(markers);
     });
-
-    L.marker([userLocation.lat, userLocation.lon], { icon: userIcon })
-      .bindPopup(`<div style="direction: rtl; font-family: sans-serif; text-align: center; font-size: 12px; font-weight: bold;">موقعیت شما: ${userLocation.name}</div>`)
-      .addTo(markers);
-
-    // Add store markers
-    stores.forEach((store) => {
-      const isSel = store.isSelected;
-      const markerColor = isSel ? "#b71c1c" : "#d32f2f";
-      const markerSize = isSel ? 28 : 22;
-
-      const storeIcon = L.divIcon({
-        className: "custom-store-marker",
-        html: `
-          <div style="background-color: ${markerColor}; color: white; width: ${markerSize}px; height: ${markerSize}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;">
-            🏪
-          </div>
-        `,
-        iconSize: [markerSize, markerSize],
-        iconAnchor: [markerSize / 2, markerSize / 2],
-      });
-
-      const neshanUrl = `https://neshan.org/maps/@${store.lat},${store.lon},16z`;
-      const baladUrl = `https://balad.ir/location?latitude=${store.lat}&longitude=${store.lon}`;
-      const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lon}`;
-
-      const popupContent = `
-        <div style="direction: rtl; font-family: sans-serif; min-width: 170px; padding: 4px;">
-          <div style="font-weight: bold; font-size: 13px; color: #1f2937;">${store.name}</div>
-          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${store.location_label || "تهران"}</div>
-          <div style="font-size: 12px; font-weight: bold; color: #d32f2f; margin: 6px 0;">
-            ${store.price_toman.toLocaleString("fa-IR")} تومان
-          </div>
-          <div style="display: flex; gap: 4px; margin-top: 8px;">
-            <a href="${neshanUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; background: #e0f2fe; color: #0284c7; padding: 3px 6px; border-radius: 6px; font-size: 10px; text-decoration: none; font-weight: bold;">مسیریاب نشان</a>
-            <a href="${baladUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; background: #fef3c7; color: #d97706; padding: 3px 6px; border-radius: 6px; font-size: 10px; text-decoration: none; font-weight: bold;">بلد</a>
-            <a href="${googleUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; background: #f3f4f6; color: #374151; padding: 3px 6px; border-radius: 6px; font-size: 10px; text-decoration: none; font-weight: bold;">Google</a>
-          </div>
-        </div>
-      `;
-
-      const m = L.marker([store.lat, store.lon], { icon: storeIcon })
-        .bindPopup(popupContent)
-        .addTo(markers);
-
-      m.on("click", () => {
-        if (onSelectStore) {
-          onSelectStore(store.id);
+    const topology=JSON.stringify([current.userLocation.lat,current.userLocation.lon,...current.stores.flatMap(p=>[p.id,p.lat,p.lon])]);
+    if(topology!==boundsKey.current&&current.stores.length){map.fitBounds(L.latLngBounds([[current.userLocation.lat,current.userLocation.lon],...current.stores.map(p=>[p.lat,p.lon] as [number,number])]).pad(.2),{animate:false,maxZoom:15});boundsKey.current=topology;}
+    else {const selected=current.stores.find(p=>p.isSelected);if(selected&&!map.getBounds().contains([selected.lat,selected.lon]))map.panTo([selected.lat,selected.lon],{animate:false});}
+    const connectors=L.layerGroup().addTo(markers);
+    function layoutPins(){
+      connectors.clearLayers();const placed:L.Point[]=[map!.latLngToContainerPoint([current.userLocation.lat,current.userLocation.lon])],size=map!.getSize();
+      for(const {marker,pin} of pinMarkers){
+        const origin=map!.latLngToContainerPoint([pin.lat,pin.lon]);let target=origin;
+        for(let attempt=0;attempt<81;attempt++){
+          const ring=Math.ceil(attempt/8),angle=(attempt%8)*Math.PI/4;
+          const point=attempt?L.point(origin.x+Math.cos(angle)*ring*49,origin.y+Math.sin(angle)*ring*49):origin;
+          if(point.x<23||point.y<23||point.x>size.x-23||point.y>size.y-23)continue;
+          if(placed.every(other=>other.distanceTo(point)>=47)){target=point;break;}
         }
-      });
-
-      // If store is selected, draw live route connection line
-      if (isSel) {
-        L.polyline(
-          [
-            [userLocation.lat, userLocation.lon],
-            [store.lat, store.lon],
-          ],
-          { color: "#0284c7", weight: 3, dashArray: "5, 8", opacity: 0.8 }
-        ).addTo(markers);
+        placed.push(target);const dx=target.x-origin.x,dy=target.y-origin.y;
+        marker.setIcon(L.divIcon({...marker.options.icon?.options,iconSize:[44,44],iconAnchor:[22-dx,22-dy]}));marker.setZIndexOffset(pin.isSelected?1000:0);
+        if(dx||dy)L.polyline([[pin.lat,pin.lon],map!.containerPointToLatLng(target)],{color:"#71818a",weight:1,opacity:.8,interactive:false}).addTo(connectors);
       }
-    });
-
-    // Fit bounds if stores exist
-    if (stores.length > 0) {
-      const group = L.featureGroup([
-        L.marker([userLocation.lat, userLocation.lon]),
-        ...stores.map((s) => L.marker([s.lat, s.lon])),
-      ]);
-      map.fitBounds(group.getBounds().pad(0.2));
     }
-  }, [userLocation, stores, onSelectStore]);
-
-  return <div ref={mapContainerRef} className={className} />;
+    layoutPins();map.on("zoomend",layoutPins);
+    return()=>{map.off("zoomend",layoutPins)};
+  },[key]);
+  return <div ref={container} className={className} role="region" aria-label="نقشهٔ تعاملی مبدأ، فروشگاه‌ها و محدوده‌های خرید"/>;
 }

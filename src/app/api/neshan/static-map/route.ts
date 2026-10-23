@@ -1,41 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getStaticMapUrl } from "@/lib/services/neshan";
-
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const latStr = searchParams.get("lat");
-  const lonStr = searchParams.get("lon");
-
-  if (!latStr || !lonStr) {
-    return new NextResponse("lat and lon are required", { status: 400 });
-  }
-
-  const lat = parseFloat(latStr);
-  const lon = parseFloat(lonStr);
-  const zoom = searchParams.get("zoom") ? parseInt(searchParams.get("zoom")!, 10) : 15;
-  const width = searchParams.get("width") ? parseInt(searchParams.get("width")!, 10) : 480;
-  const height = searchParams.get("height") ? parseInt(searchParams.get("height")!, 10) : 200;
-
+import {NextRequest,NextResponse} from "next/server";
+import {getStaticMapUrl} from "@/lib/services/neshan";
+import {AppError,finiteNumber} from "@/lib/validation";
+import {rateLimit} from "@/lib/rate-limit";
+export async function GET(req:NextRequest) {
   try {
-    const neshanUrl = getStaticMapUrl(lat, lon, zoom, width, height);
-    const resp = await fetch(neshanUrl, {
-      next: { revalidate: 86400 },
-    });
-
-    if (!resp.ok) {
-      return new NextResponse("Map fetch failed", { status: resp.status });
-    }
-
-    const buffer = await resp.arrayBuffer();
-    return new NextResponse(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-      },
-    });
-  } catch (error) {
-    console.error("Error fetching Neshan static map:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
-  }
+    const p=req.nextUrl.searchParams;
+    if(!p.has("lat")||!p.has("lon"))throw new AppError("مختصات نقشه لازم است.");
+    const lat=finiteNumber(Number(p.get("lat")),35.3,36.1),lon=finiteNumber(Number(p.get("lon")),50.7,52);
+    const zoom=finiteNumber(Number(p.get("zoom")||15),5,18),width=finiteNumber(Number(p.get("width")||480),100,1024),height=finiteNumber(Number(p.get("height")||200),100,768);
+    if(![zoom,width,height].every(Number.isInteger))throw new AppError("ابعاد نقشه معتبر نیست.");
+    rateLimit(`map:${req.headers.get("x-forwarded-for")?.split(",")[0]||"anonymous"}`,20);
+    const response=await fetch(getStaticMapUrl(lat,lon,zoom,width,height),{signal:AbortSignal.timeout(3500),cache:"no-store"});
+    if(!response.ok||!response.headers.get("content-type")?.startsWith("image/"))return new NextResponse("نقشه در دسترس نیست؛ آدرس فروشگاه را ببینید.",{status:503});
+    return new NextResponse(await response.arrayBuffer(),{headers:{"Content-Type":response.headers.get("content-type")!,"Cache-Control":"private, max-age=300"}});
+  } catch(error) {return new NextResponse(error instanceof AppError?error.message:"نقشه در دسترس نیست.",{status:error instanceof AppError?error.status:503});}
 }

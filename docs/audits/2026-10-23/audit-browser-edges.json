@@ -1,0 +1,7 @@
+{
+  "stale_response_after_reset": true,
+  "map_markers_without_tiles": 3,
+  "list_available_without_tiles": 2,
+  "price_changed_shown_as_pending": true,
+  "price_changed_has_recovery_action": false
+}

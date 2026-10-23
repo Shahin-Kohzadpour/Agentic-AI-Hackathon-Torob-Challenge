@@ -1,136 +1,21 @@
 "use client";
-
-import React, { useState, useEffect } from "react";
-import { Mic, MicOff, Check, X } from "lucide-react";
-
-interface Props {
-  onTranscriptReady: (transcript: string) => void;
-  disabled?: boolean;
-}
-
-export default function VoiceInput({ onTranscriptReady, disabled }: Props) {
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const [hasSpeechRecognition, setHasSpeechRecognition] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-      if (SpeechRecognition) {
-        setHasSpeechRecognition(true);
-        const recog = new SpeechRecognition();
-        recog.continuous = false;
-        recog.interimResults = true;
-        recog.lang = "fa-IR";
-
-        recog.onresult = (event: any) => {
-          let current = "";
-          for (let i = 0; i < event.results.length; i++) {
-            current += event.results[i][0].transcript;
-          }
-          setTranscript(current);
-        };
-
-        recog.onerror = () => {
-          setIsRecording(false);
-        };
-
-        recog.onend = () => {
-          setIsRecording(false);
-        };
-
-        setRecognition(recog);
-      }
-    }
-  }, []);
-
-  const toggleRecording = () => {
-    if (!hasSpeechRecognition) {
-      // Mock voice input for demonstration if browser doesn't have Web Speech API
-      setIsRecording(true);
-      setTimeout(() => {
-        setTranscript("برای رفت‌وآمد هندزفری می‌خواهم، بودجه‌ام چهار میلیون و دویست هزار تومان است و ترب‌پی حضوری می‌خواهم");
-        setIsRecording(false);
-      }, 1500);
-      return;
-    }
-
-    if (isRecording) {
-      recognition?.stop();
-      setIsRecording(false);
-    } else {
-      setTranscript("");
-      recognition?.start();
-      setIsRecording(true);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (transcript.trim()) {
-      onTranscriptReady(transcript.trim());
-      setTranscript("");
-    }
-  };
-
-  const handleCancel = () => {
-    setTranscript("");
-    setIsRecording(false);
-  };
-
-  return (
-    <div className="relative inline-flex items-center">
-      {/* Mic Button */}
-      <button
-        type="button"
-        onClick={toggleRecording}
-        disabled={disabled}
-        title={isRecording ? "توقف ضبط" : "ورودی صوتی (Push-to-Talk)"}
-        className={`p-2 rounded-xl transition-all ${
-          isRecording
-            ? "bg-rose-500 text-white animate-pulse shadow-md"
-            : "text-gray-500 hover:text-torob-red hover:bg-red-50"
-        }`}
-      >
-        {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-      </button>
-
-      {/* Editable Transcript Popup */}
-      {transcript && (
-        <div className="absolute bottom-12 right-0 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-3 z-50 animate-in fade-in slide-in-from-bottom-2">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-1.5 mb-2">
-            <span className="text-[11px] font-bold text-gray-700">متن تبدیل‌شده صوت (قابل ویرایش):</span>
-            <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <textarea
-            value={transcript}
-            onChange={(e) => setTranscript(e.target.value)}
-            rows={2}
-            className="w-full text-xs text-gray-800 p-2 rounded-lg border border-gray-200 focus:outline-none focus:border-torob-red resize-none font-sans"
-          />
-
-          <div className="flex justify-end gap-1.5 mt-2">
-            <button
-              onClick={handleCancel}
-              className="px-2 py-1 text-[11px] text-gray-500 hover:bg-gray-100 rounded-lg"
-            >
-              انصراف
-            </button>
-            <button
-              onClick={handleConfirm}
-              className="px-3 py-1 bg-torob-red hover:bg-torob-darkred text-white text-[11px] font-bold rounded-lg flex items-center gap-1"
-            >
-              <Check className="w-3 h-3" />
-              <span>ارسال متن</span>
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+import {useEffect,useRef,useState} from "react";
+import {Mic,MicOff,X,Check} from "lucide-react";
+export default function VoiceInput({onTranscriptReady,disabled,contextKey}:{onTranscriptReady:(text:string)=>void;disabled?:boolean;contextKey?:string}){
+ const [recording,setRecording]=useState(false),[transcript,setTranscript]=useState(""),[error,setError]=useState("");
+ const generation=useRef(0);
+ const recognition=useRef<any>(null),timer=useRef<ReturnType<typeof setTimeout>|null>(null);
+ useEffect(()=>{generation.current++;recognition.current?.abort();if(timer.current)clearTimeout(timer.current);setRecording(false);setTranscript("");setError("");return()=>{recognition.current?.abort();if(timer.current)clearTimeout(timer.current)}},[contextKey]);
+ function stop(cancel=false){if(cancel)generation.current++;if(timer.current)clearTimeout(timer.current);if(cancel)recognition.current?.abort();else recognition.current?.stop();setRecording(false);if(cancel)setTranscript("");}
+ function start(){
+  if(recording){stop();return;}
+  const Recognition=(window as any).SpeechRecognition||(window as any).webkitSpeechRecognition;
+  if(!Recognition){setError("ورودی صوتی در این مرورگر پشتیبانی نمی‌شود؛ متن درخواست را تایپ کنید.");return;}
+  setError("");setTranscript("");const gen=++generation.current;const r=new Recognition();recognition.current=r;r.lang="fa-IR";r.continuous=false;r.interimResults=true;
+  r.onresult=(event:any)=>{if(gen===generation.current)setTranscript(Array.from(event.results).map((result:any)=>result[0].transcript).join(" "));};
+  r.onerror=(event:any)=>{if(gen!==generation.current)return;setRecording(false);setError(event.error==="not-allowed"?"دسترسی میکروفن داده نشد؛ تایپ همچنان در دسترس است.":"تبدیل صوت انجام نشد؛ دوباره تلاش کنید یا تایپ کنید.")};
+  r.onend=()=>{if(gen!==generation.current)return;setRecording(false);if(timer.current)clearTimeout(timer.current)};
+  try{r.start();setRecording(true);timer.current=setTimeout(()=>stop(),60000)}catch{setError("ضبط شروع نشد؛ دوباره تلاش کنید.")}
+ }
+ return <div className="media-control"><button className={`icon-button ${recording?"recording":""}`} type="button" disabled={disabled} onClick={start} title={recording?"توقف ضبط":"ورودی صوتی"} aria-label={recording?"توقف ضبط":"ورودی صوتی"}>{recording?<MicOff size={19}/>:<Mic size={19}/>}</button>{(transcript||recording||error)&&<div className="media-popover" role="dialog" aria-label="ورودی صوتی"><div className="section-heading"><strong>{recording?"در حال شنیدن؛ حداکثر یک دقیقه":"متن صوت را بررسی کنید"}</strong><button className="icon-button" aria-label="بستن ورودی صوتی" onClick={()=>{stop(true);setError("")}} type="button"><X size={17}/></button></div>{error&&<p className="error-text" role="status">{error}</p>}<label>متن قابل ویرایش<textarea rows={3} value={transcript} onChange={e=>setTranscript(e.target.value)} placeholder="پس از صحبت، مبلغ و نام مدل را بررسی کنید."/></label><div className="media-actions"><button type="button" className="text-button" onClick={()=>{stop(true);setError("")}}>انصراف</button><button type="button" className="button button-small" disabled={!transcript.trim()||recording} onClick={()=>{onTranscriptReady(transcript.trim());setTranscript("")}}><Check size={16}/>ارسال متن بررسی‌شده</button></div></div>}</div>;
 }

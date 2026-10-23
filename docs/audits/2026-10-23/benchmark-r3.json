@@ -1,0 +1,1212 @@
+{
+  "at": "2026-10-23T13:16:44.129Z",
+  "environment": {
+    "node": "v24.11.1",
+    "platform": "win32",
+    "location": "developer Windows host",
+    "database": "full supplied catalogue",
+    "cache_note": "First pass and repeated passes; OS caches not flushed. Not an uncached disk benchmark."
+  },
+  "retrieval": {
+    "first_pass": {
+      "n": 20,
+      "p50_ms": 359.96,
+      "p95_ms": 1651.7,
+      "max_ms": 2728.96
+    },
+    "repeated": {
+      "n": 80,
+      "p50_ms": 47.15,
+      "p95_ms": 596.75,
+      "max_ms": 1435.41
+    },
+    "all": {
+      "n": 100,
+      "p50_ms": 97.65,
+      "p95_ms": 1035.16,
+      "max_ms": 2728.96
+    },
+    "rows": [
+      {
+        "query": "Anker R50i A3949",
+        "round": 0,
+        "ms": 79.6368,
+        "ids": [
+          "product_92ac53fa75e18e8e73f20b56",
+          "product_2d2917467fe1c75845ee81b6",
+          "product_32aebe319cb4f35246007838"
+        ]
+      },
+      {
+        "query": "R50i NC A3959",
+        "round": 0,
+        "ms": 34.7337,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_258ab3af212a1f8bc4cde006",
+          "product_51f620f1a020f1e500796cac"
+        ]
+      },
+      {
+        "query": "سامسونگ S25 FE 256/8",
+        "round": 0,
+        "ms": 359.9563999999998,
+        "ids": [
+          "product_6c62d575e3d247f6f29e051a",
+          "product_f07ef205504b7ab37b60b509"
+        ]
+      },
+      {
+        "query": "QCY T13",
+        "round": 0,
+        "ms": 197.81979999999976,
+        "ids": [
+          "product_0bcba67064b477a8b5b301ab",
+          "product_13d580cf0c8de6cfcbd76e94",
+          "product_a0b9dc5ecc796b0f79a33cf3"
+        ]
+      },
+      {
+        "query": "samsung a55",
+        "round": 0,
+        "ms": 87.34479999999985,
+        "ids": [
+          "product_7e45a68470197fc3a71fa424",
+          "product_e473e271212fc69b5cee4502",
+          "product_1c8941b05dc129d4a07a096a"
+        ]
+      },
+      {
+        "query": "شیائومی Redmi Note 13",
+        "round": 0,
+        "ms": 1016.4175,
+        "ids": [
+          "product_d2e4cd28c7fe43649829e7f4",
+          "product_833e00af7724e8ee58101f9c",
+          "product_9754cfe3330a5813d5b7a31e"
+        ]
+      },
+      {
+        "query": "آیفون 13",
+        "round": 0,
+        "ms": 1346.5828000000001,
+        "ids": [
+          "product_81c7c9265f4b611f84831637",
+          "product_3707aca19aba8c2b902da438",
+          "product_24bda74bba9b4e6f9b806f75"
+        ]
+      },
+      {
+        "query": "هندزفری",
+        "round": 0,
+        "ms": 1651.7019,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_24e20485148d72cb2f46305d",
+          "product_258ab3af212a1f8bc4cde006"
+        ]
+      },
+      {
+        "query": "گوشی برای عکاسی",
+        "round": 0,
+        "ms": 22.357500000000073,
+        "ids": []
+      },
+      {
+        "query": "لپ تاپ دانشجویی",
+        "round": 0,
+        "ms": 2728.9580000000005,
+        "ids": [
+          "product_cf55295b9962e0077a843c07",
+          "product_38a6a90b7a47a846e6a890d2",
+          "product_376ee35da291d727838dfebd"
+        ]
+      },
+      {
+        "query": "کفش چرم",
+        "round": 0,
+        "ms": 859.7000000000007,
+        "ids": [
+          "product_312b7cc83df739d2384deed1",
+          "product_23baea80e86d7a8e159336f5",
+          "product_6acdf5805f4481c8da009158"
+        ]
+      },
+      {
+        "query": "تلویزیون",
+        "round": 0,
+        "ms": 1070.6278000000002,
+        "ids": [
+          "product_2b26b9cf3b3279ce39630a32",
+          "product_aca4f048cfb9933717c94609",
+          "product_e45d8a189fd6603867831c38"
+        ]
+      },
+      {
+        "query": "یخچال",
+        "round": 0,
+        "ms": 821.7428,
+        "ids": [
+          "product_a112c972266b57d0f7eddeab",
+          "product_9798899837231efb551da550",
+          "product_3139e210f468d310c1df9d65"
+        ]
+      },
+      {
+        "query": "کابل USB C",
+        "round": 0,
+        "ms": 703.2682999999997,
+        "ids": [
+          "product_417d433ecc799253fe6c782f",
+          "product_1589fca9488dedb573ed8d79",
+          "product_9e1f3ff99d2f4d7c255c7210"
+        ]
+      },
+      {
+        "query": "اسپیکر بلوتوثی",
+        "round": 0,
+        "ms": 559.0250999999989,
+        "ids": [
+          "product_241eb5d0978b4382eddeeddf",
+          "product_b3651ef4cfef6552bd91889c",
+          "product_d73024f4f3f2c05aa9cb6307"
+        ]
+      },
+      {
+        "query": "هدفون برای مکالمه",
+        "round": 0,
+        "ms": 16.38839999999982,
+        "ids": [
+          "product_30a62e2b735ce82cc83198c7",
+          "product_302d5f63700209d01692778f",
+          "product_40e37203190e6d779af3b0e0"
+        ]
+      },
+      {
+        "query": "سامسونگ s24 ultra",
+        "round": 0,
+        "ms": 112.48310000000129,
+        "ids": [
+          "product_7e73e6f8c8744b15e57a56fd",
+          "product_0677a5e0aea2769353d9b69c",
+          "product_1555cf093924bbee40cb9ec7"
+        ]
+      },
+      {
+        "query": "پاوربانک انکر",
+        "round": 0,
+        "ms": 86.75190000000111,
+        "ids": [
+          "product_c92a5290ff2362b3daeab64f",
+          "product_91389e22069230f68df4585f",
+          "product_76153f8bf9ed5575601978bd"
+        ]
+      },
+      {
+        "query": "دوربین کانن",
+        "round": 0,
+        "ms": 1035.1597000000002,
+        "ids": [
+          "product_f99dcc28f5b48455e2a5cae1",
+          "product_3682d3d7a0cf214bcdf3fe02",
+          "product_5d4023f4787c55fe5bd75ba3"
+        ]
+      },
+      {
+        "query": "گوشی ZX999999",
+        "round": 0,
+        "ms": 10.190999999998894,
+        "ids": []
+      },
+      {
+        "query": "Anker R50i A3949",
+        "round": 1,
+        "ms": 7.442399999999907,
+        "ids": [
+          "product_92ac53fa75e18e8e73f20b56",
+          "product_2d2917467fe1c75845ee81b6",
+          "product_32aebe319cb4f35246007838"
+        ]
+      },
+      {
+        "query": "R50i NC A3959",
+        "round": 1,
+        "ms": 7.84939999999915,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_258ab3af212a1f8bc4cde006",
+          "product_51f620f1a020f1e500796cac"
+        ]
+      },
+      {
+        "query": "سامسونگ S25 FE 256/8",
+        "round": 1,
+        "ms": 47.149499999999534,
+        "ids": [
+          "product_6c62d575e3d247f6f29e051a",
+          "product_f07ef205504b7ab37b60b509"
+        ]
+      },
+      {
+        "query": "QCY T13",
+        "round": 1,
+        "ms": 44.798399999999674,
+        "ids": [
+          "product_0bcba67064b477a8b5b301ab",
+          "product_13d580cf0c8de6cfcbd76e94",
+          "product_a0b9dc5ecc796b0f79a33cf3"
+        ]
+      },
+      {
+        "query": "samsung a55",
+        "round": 1,
+        "ms": 33.485099999999875,
+        "ids": [
+          "product_7e45a68470197fc3a71fa424",
+          "product_e473e271212fc69b5cee4502",
+          "product_1c8941b05dc129d4a07a096a"
+        ]
+      },
+      {
+        "query": "شیائومی Redmi Note 13",
+        "round": 1,
+        "ms": 213.78470000000016,
+        "ids": [
+          "product_d2e4cd28c7fe43649829e7f4",
+          "product_833e00af7724e8ee58101f9c",
+          "product_9754cfe3330a5813d5b7a31e"
+        ]
+      },
+      {
+        "query": "آیفون 13",
+        "round": 1,
+        "ms": 511.30319999999847,
+        "ids": [
+          "product_81c7c9265f4b611f84831637",
+          "product_3707aca19aba8c2b902da438",
+          "product_24bda74bba9b4e6f9b806f75"
+        ]
+      },
+      {
+        "query": "هندزفری",
+        "round": 1,
+        "ms": 507.0420000000013,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_24e20485148d72cb2f46305d",
+          "product_258ab3af212a1f8bc4cde006"
+        ]
+      },
+      {
+        "query": "گوشی برای عکاسی",
+        "round": 1,
+        "ms": 7.370499999999083,
+        "ids": []
+      },
+      {
+        "query": "لپ تاپ دانشجویی",
+        "round": 1,
+        "ms": 448.39400000000023,
+        "ids": [
+          "product_cf55295b9962e0077a843c07",
+          "product_38a6a90b7a47a846e6a890d2",
+          "product_376ee35da291d727838dfebd"
+        ]
+      },
+      {
+        "query": "کفش چرم",
+        "round": 1,
+        "ms": 465.8133000000016,
+        "ids": [
+          "product_312b7cc83df739d2384deed1",
+          "product_23baea80e86d7a8e159336f5",
+          "product_6acdf5805f4481c8da009158"
+        ]
+      },
+      {
+        "query": "تلویزیون",
+        "round": 1,
+        "ms": 424.2502999999997,
+        "ids": [
+          "product_2b26b9cf3b3279ce39630a32",
+          "product_aca4f048cfb9933717c94609",
+          "product_e45d8a189fd6603867831c38"
+        ]
+      },
+      {
+        "query": "یخچال",
+        "round": 1,
+        "ms": 436.9291000000012,
+        "ids": [
+          "product_a112c972266b57d0f7eddeab",
+          "product_9798899837231efb551da550",
+          "product_3139e210f468d310c1df9d65"
+        ]
+      },
+      {
+        "query": "کابل USB C",
+        "round": 1,
+        "ms": 824.0862000000016,
+        "ids": [
+          "product_417d433ecc799253fe6c782f",
+          "product_1589fca9488dedb573ed8d79",
+          "product_9e1f3ff99d2f4d7c255c7210"
+        ]
+      },
+      {
+        "query": "اسپیکر بلوتوثی",
+        "round": 1,
+        "ms": 292.1490999999987,
+        "ids": [
+          "product_241eb5d0978b4382eddeeddf",
+          "product_b3651ef4cfef6552bd91889c",
+          "product_d73024f4f3f2c05aa9cb6307"
+        ]
+      },
+      {
+        "query": "هدفون برای مکالمه",
+        "round": 1,
+        "ms": 7.5310000000026776,
+        "ids": [
+          "product_30a62e2b735ce82cc83198c7",
+          "product_302d5f63700209d01692778f",
+          "product_40e37203190e6d779af3b0e0"
+        ]
+      },
+      {
+        "query": "سامسونگ s24 ultra",
+        "round": 1,
+        "ms": 24.516599999999016,
+        "ids": [
+          "product_7e73e6f8c8744b15e57a56fd",
+          "product_0677a5e0aea2769353d9b69c",
+          "product_1555cf093924bbee40cb9ec7"
+        ]
+      },
+      {
+        "query": "پاوربانک انکر",
+        "round": 1,
+        "ms": 18.76680000000124,
+        "ids": [
+          "product_c92a5290ff2362b3daeab64f",
+          "product_91389e22069230f68df4585f",
+          "product_76153f8bf9ed5575601978bd"
+        ]
+      },
+      {
+        "query": "دوربین کانن",
+        "round": 1,
+        "ms": 282.17139999999927,
+        "ids": [
+          "product_f99dcc28f5b48455e2a5cae1",
+          "product_3682d3d7a0cf214bcdf3fe02",
+          "product_5d4023f4787c55fe5bd75ba3"
+        ]
+      },
+      {
+        "query": "گوشی ZX999999",
+        "round": 1,
+        "ms": 0.7449999999989814,
+        "ids": []
+      },
+      {
+        "query": "Anker R50i A3949",
+        "round": 2,
+        "ms": 3.684499999999389,
+        "ids": [
+          "product_92ac53fa75e18e8e73f20b56",
+          "product_2d2917467fe1c75845ee81b6",
+          "product_32aebe319cb4f35246007838"
+        ]
+      },
+      {
+        "query": "R50i NC A3959",
+        "round": 2,
+        "ms": 2.831400000002759,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_258ab3af212a1f8bc4cde006",
+          "product_51f620f1a020f1e500796cac"
+        ]
+      },
+      {
+        "query": "سامسونگ S25 FE 256/8",
+        "round": 2,
+        "ms": 15.833400000003166,
+        "ids": [
+          "product_6c62d575e3d247f6f29e051a",
+          "product_f07ef205504b7ab37b60b509"
+        ]
+      },
+      {
+        "query": "QCY T13",
+        "round": 2,
+        "ms": 14.521100000001752,
+        "ids": [
+          "product_0bcba67064b477a8b5b301ab",
+          "product_13d580cf0c8de6cfcbd76e94",
+          "product_a0b9dc5ecc796b0f79a33cf3"
+        ]
+      },
+      {
+        "query": "samsung a55",
+        "round": 2,
+        "ms": 9.25119999999879,
+        "ids": [
+          "product_7e45a68470197fc3a71fa424",
+          "product_e473e271212fc69b5cee4502",
+          "product_1c8941b05dc129d4a07a096a"
+        ]
+      },
+      {
+        "query": "شیائومی Redmi Note 13",
+        "round": 2,
+        "ms": 88.65370000000257,
+        "ids": [
+          "product_d2e4cd28c7fe43649829e7f4",
+          "product_833e00af7724e8ee58101f9c",
+          "product_9754cfe3330a5813d5b7a31e"
+        ]
+      },
+      {
+        "query": "آیفون 13",
+        "round": 2,
+        "ms": 461.6320000000014,
+        "ids": [
+          "product_81c7c9265f4b611f84831637",
+          "product_3707aca19aba8c2b902da438",
+          "product_24bda74bba9b4e6f9b806f75"
+        ]
+      },
+      {
+        "query": "هندزفری",
+        "round": 2,
+        "ms": 305.1134999999995,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_24e20485148d72cb2f46305d",
+          "product_258ab3af212a1f8bc4cde006"
+        ]
+      },
+      {
+        "query": "گوشی برای عکاسی",
+        "round": 2,
+        "ms": 4.57300000000032,
+        "ids": []
+      },
+      {
+        "query": "لپ تاپ دانشجویی",
+        "round": 2,
+        "ms": 339.2597999999998,
+        "ids": [
+          "product_cf55295b9962e0077a843c07",
+          "product_38a6a90b7a47a846e6a890d2",
+          "product_376ee35da291d727838dfebd"
+        ]
+      },
+      {
+        "query": "کفش چرم",
+        "round": 2,
+        "ms": 269.3760000000002,
+        "ids": [
+          "product_312b7cc83df739d2384deed1",
+          "product_23baea80e86d7a8e159336f5",
+          "product_6acdf5805f4481c8da009158"
+        ]
+      },
+      {
+        "query": "تلویزیون",
+        "round": 2,
+        "ms": 346.1548999999977,
+        "ids": [
+          "product_2b26b9cf3b3279ce39630a32",
+          "product_aca4f048cfb9933717c94609",
+          "product_e45d8a189fd6603867831c38"
+        ]
+      },
+      {
+        "query": "یخچال",
+        "round": 2,
+        "ms": 313.53470000000016,
+        "ids": [
+          "product_a112c972266b57d0f7eddeab",
+          "product_9798899837231efb551da550",
+          "product_3139e210f468d310c1df9d65"
+        ]
+      },
+      {
+        "query": "کابل USB C",
+        "round": 2,
+        "ms": 301.90979999999763,
+        "ids": [
+          "product_417d433ecc799253fe6c782f",
+          "product_1589fca9488dedb573ed8d79",
+          "product_9e1f3ff99d2f4d7c255c7210"
+        ]
+      },
+      {
+        "query": "اسپیکر بلوتوثی",
+        "round": 2,
+        "ms": 195.51260000000184,
+        "ids": [
+          "product_241eb5d0978b4382eddeeddf",
+          "product_b3651ef4cfef6552bd91889c",
+          "product_d73024f4f3f2c05aa9cb6307"
+        ]
+      },
+      {
+        "query": "هدفون برای مکالمه",
+        "round": 2,
+        "ms": 5.14799999999741,
+        "ids": [
+          "product_30a62e2b735ce82cc83198c7",
+          "product_302d5f63700209d01692778f",
+          "product_40e37203190e6d779af3b0e0"
+        ]
+      },
+      {
+        "query": "سامسونگ s24 ultra",
+        "round": 2,
+        "ms": 44.545099999999366,
+        "ids": [
+          "product_7e73e6f8c8744b15e57a56fd",
+          "product_0677a5e0aea2769353d9b69c",
+          "product_1555cf093924bbee40cb9ec7"
+        ]
+      },
+      {
+        "query": "پاوربانک انکر",
+        "round": 2,
+        "ms": 21.224500000000262,
+        "ids": [
+          "product_c92a5290ff2362b3daeab64f",
+          "product_91389e22069230f68df4585f",
+          "product_76153f8bf9ed5575601978bd"
+        ]
+      },
+      {
+        "query": "دوربین کانن",
+        "round": 2,
+        "ms": 222.4399999999987,
+        "ids": [
+          "product_f99dcc28f5b48455e2a5cae1",
+          "product_3682d3d7a0cf214bcdf3fe02",
+          "product_5d4023f4787c55fe5bd75ba3"
+        ]
+      },
+      {
+        "query": "گوشی ZX999999",
+        "round": 2,
+        "ms": 0.7424000000028173,
+        "ids": []
+      },
+      {
+        "query": "Anker R50i A3949",
+        "round": 3,
+        "ms": 3.397499999999127,
+        "ids": [
+          "product_92ac53fa75e18e8e73f20b56",
+          "product_2d2917467fe1c75845ee81b6",
+          "product_32aebe319cb4f35246007838"
+        ]
+      },
+      {
+        "query": "R50i NC A3959",
+        "round": 3,
+        "ms": 2.9974999999976717,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_258ab3af212a1f8bc4cde006",
+          "product_51f620f1a020f1e500796cac"
+        ]
+      },
+      {
+        "query": "سامسونگ S25 FE 256/8",
+        "round": 3,
+        "ms": 18.51009999999951,
+        "ids": [
+          "product_6c62d575e3d247f6f29e051a",
+          "product_f07ef205504b7ab37b60b509"
+        ]
+      },
+      {
+        "query": "QCY T13",
+        "round": 3,
+        "ms": 16.316500000000815,
+        "ids": [
+          "product_0bcba67064b477a8b5b301ab",
+          "product_13d580cf0c8de6cfcbd76e94",
+          "product_a0b9dc5ecc796b0f79a33cf3"
+        ]
+      },
+      {
+        "query": "samsung a55",
+        "round": 3,
+        "ms": 15.683299999996962,
+        "ids": [
+          "product_7e45a68470197fc3a71fa424",
+          "product_e473e271212fc69b5cee4502",
+          "product_1c8941b05dc129d4a07a096a"
+        ]
+      },
+      {
+        "query": "شیائومی Redmi Note 13",
+        "round": 3,
+        "ms": 91.85149999999703,
+        "ids": [
+          "product_d2e4cd28c7fe43649829e7f4",
+          "product_833e00af7724e8ee58101f9c",
+          "product_9754cfe3330a5813d5b7a31e"
+        ]
+      },
+      {
+        "query": "آیفون 13",
+        "round": 3,
+        "ms": 562.2199,
+        "ids": [
+          "product_81c7c9265f4b611f84831637",
+          "product_3707aca19aba8c2b902da438",
+          "product_24bda74bba9b4e6f9b806f75"
+        ]
+      },
+      {
+        "query": "هندزفری",
+        "round": 3,
+        "ms": 454.1967000000004,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_24e20485148d72cb2f46305d",
+          "product_258ab3af212a1f8bc4cde006"
+        ]
+      },
+      {
+        "query": "گوشی برای عکاسی",
+        "round": 3,
+        "ms": 5.319700000000012,
+        "ids": []
+      },
+      {
+        "query": "لپ تاپ دانشجویی",
+        "round": 3,
+        "ms": 245.30019999999786,
+        "ids": [
+          "product_cf55295b9962e0077a843c07",
+          "product_38a6a90b7a47a846e6a890d2",
+          "product_376ee35da291d727838dfebd"
+        ]
+      },
+      {
+        "query": "کفش چرم",
+        "round": 3,
+        "ms": 357.73909999999887,
+        "ids": [
+          "product_312b7cc83df739d2384deed1",
+          "product_23baea80e86d7a8e159336f5",
+          "product_6acdf5805f4481c8da009158"
+        ]
+      },
+      {
+        "query": "تلویزیون",
+        "round": 3,
+        "ms": 318.0577000000012,
+        "ids": [
+          "product_2b26b9cf3b3279ce39630a32",
+          "product_aca4f048cfb9933717c94609",
+          "product_e45d8a189fd6603867831c38"
+        ]
+      },
+      {
+        "query": "یخچال",
+        "round": 3,
+        "ms": 238.6115000000027,
+        "ids": [
+          "product_a112c972266b57d0f7eddeab",
+          "product_9798899837231efb551da550",
+          "product_3139e210f468d310c1df9d65"
+        ]
+      },
+      {
+        "query": "کابل USB C",
+        "round": 3,
+        "ms": 322.60310000000027,
+        "ids": [
+          "product_417d433ecc799253fe6c782f",
+          "product_1589fca9488dedb573ed8d79",
+          "product_9e1f3ff99d2f4d7c255c7210"
+        ]
+      },
+      {
+        "query": "اسپیکر بلوتوثی",
+        "round": 3,
+        "ms": 122.86679999999978,
+        "ids": [
+          "product_241eb5d0978b4382eddeeddf",
+          "product_b3651ef4cfef6552bd91889c",
+          "product_d73024f4f3f2c05aa9cb6307"
+        ]
+      },
+      {
+        "query": "هدفون برای مکالمه",
+        "round": 3,
+        "ms": 2.4425000000010186,
+        "ids": [
+          "product_30a62e2b735ce82cc83198c7",
+          "product_302d5f63700209d01692778f",
+          "product_40e37203190e6d779af3b0e0"
+        ]
+      },
+      {
+        "query": "سامسونگ s24 ultra",
+        "round": 3,
+        "ms": 18.357399999997142,
+        "ids": [
+          "product_7e73e6f8c8744b15e57a56fd",
+          "product_0677a5e0aea2769353d9b69c",
+          "product_1555cf093924bbee40cb9ec7"
+        ]
+      },
+      {
+        "query": "پاوربانک انکر",
+        "round": 3,
+        "ms": 23.60239999999976,
+        "ids": [
+          "product_c92a5290ff2362b3daeab64f",
+          "product_91389e22069230f68df4585f",
+          "product_76153f8bf9ed5575601978bd"
+        ]
+      },
+      {
+        "query": "دوربین کانن",
+        "round": 3,
+        "ms": 234.92199999999866,
+        "ids": [
+          "product_f99dcc28f5b48455e2a5cae1",
+          "product_3682d3d7a0cf214bcdf3fe02",
+          "product_5d4023f4787c55fe5bd75ba3"
+        ]
+      },
+      {
+        "query": "گوشی ZX999999",
+        "round": 3,
+        "ms": 0.7099999999991269,
+        "ids": []
+      },
+      {
+        "query": "Anker R50i A3949",
+        "round": 4,
+        "ms": 2.6974000000009255,
+        "ids": [
+          "product_92ac53fa75e18e8e73f20b56",
+          "product_2d2917467fe1c75845ee81b6",
+          "product_32aebe319cb4f35246007838"
+        ]
+      },
+      {
+        "query": "R50i NC A3959",
+        "round": 4,
+        "ms": 2.739400000002206,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_258ab3af212a1f8bc4cde006",
+          "product_51f620f1a020f1e500796cac"
+        ]
+      },
+      {
+        "query": "سامسونگ S25 FE 256/8",
+        "round": 4,
+        "ms": 24.474899999997433,
+        "ids": [
+          "product_6c62d575e3d247f6f29e051a",
+          "product_f07ef205504b7ab37b60b509"
+        ]
+      },
+      {
+        "query": "QCY T13",
+        "round": 4,
+        "ms": 23.674999999999272,
+        "ids": [
+          "product_0bcba67064b477a8b5b301ab",
+          "product_13d580cf0c8de6cfcbd76e94",
+          "product_a0b9dc5ecc796b0f79a33cf3"
+        ]
+      },
+      {
+        "query": "samsung a55",
+        "round": 4,
+        "ms": 11.358400000000984,
+        "ids": [
+          "product_7e45a68470197fc3a71fa424",
+          "product_e473e271212fc69b5cee4502",
+          "product_1c8941b05dc129d4a07a096a"
+        ]
+      },
+      {
+        "query": "شیائومی Redmi Note 13",
+        "round": 4,
+        "ms": 97.65060000000085,
+        "ids": [
+          "product_d2e4cd28c7fe43649829e7f4",
+          "product_833e00af7724e8ee58101f9c",
+          "product_9754cfe3330a5813d5b7a31e"
+        ]
+      },
+      {
+        "query": "آیفون 13",
+        "round": 4,
+        "ms": 413.9511999999995,
+        "ids": [
+          "product_81c7c9265f4b611f84831637",
+          "product_3707aca19aba8c2b902da438",
+          "product_24bda74bba9b4e6f9b806f75"
+        ]
+      },
+      {
+        "query": "هندزفری",
+        "round": 4,
+        "ms": 596.7510000000002,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_24e20485148d72cb2f46305d",
+          "product_258ab3af212a1f8bc4cde006"
+        ]
+      },
+      {
+        "query": "گوشی برای عکاسی",
+        "round": 4,
+        "ms": 7.762600000001839,
+        "ids": []
+      },
+      {
+        "query": "لپ تاپ دانشجویی",
+        "round": 4,
+        "ms": 752.5211999999992,
+        "ids": [
+          "product_cf55295b9962e0077a843c07",
+          "product_38a6a90b7a47a846e6a890d2",
+          "product_376ee35da291d727838dfebd"
+        ]
+      },
+      {
+        "query": "کفش چرم",
+        "round": 4,
+        "ms": 1435.4095000000016,
+        "ids": [
+          "product_312b7cc83df739d2384deed1",
+          "product_23baea80e86d7a8e159336f5",
+          "product_6acdf5805f4481c8da009158"
+        ]
+      },
+      {
+        "query": "تلویزیون",
+        "round": 4,
+        "ms": 542.7597000000023,
+        "ids": [
+          "product_2b26b9cf3b3279ce39630a32",
+          "product_aca4f048cfb9933717c94609",
+          "product_e45d8a189fd6603867831c38"
+        ]
+      },
+      {
+        "query": "یخچال",
+        "round": 4,
+        "ms": 492.66100000000006,
+        "ids": [
+          "product_a112c972266b57d0f7eddeab",
+          "product_9798899837231efb551da550",
+          "product_3139e210f468d310c1df9d65"
+        ]
+      },
+      {
+        "query": "کابل USB C",
+        "round": 4,
+        "ms": 615.2174999999988,
+        "ids": [
+          "product_417d433ecc799253fe6c782f",
+          "product_1589fca9488dedb573ed8d79",
+          "product_9e1f3ff99d2f4d7c255c7210"
+        ]
+      },
+      {
+        "query": "اسپیکر بلوتوثی",
+        "round": 4,
+        "ms": 255.78050000000076,
+        "ids": [
+          "product_241eb5d0978b4382eddeeddf",
+          "product_b3651ef4cfef6552bd91889c",
+          "product_d73024f4f3f2c05aa9cb6307"
+        ]
+      },
+      {
+        "query": "هدفون برای مکالمه",
+        "round": 4,
+        "ms": 4.04910000000018,
+        "ids": [
+          "product_30a62e2b735ce82cc83198c7",
+          "product_302d5f63700209d01692778f",
+          "product_40e37203190e6d779af3b0e0"
+        ]
+      },
+      {
+        "query": "سامسونگ s24 ultra",
+        "round": 4,
+        "ms": 24.17199999999866,
+        "ids": [
+          "product_7e73e6f8c8744b15e57a56fd",
+          "product_0677a5e0aea2769353d9b69c",
+          "product_1555cf093924bbee40cb9ec7"
+        ]
+      },
+      {
+        "query": "پاوربانک انکر",
+        "round": 4,
+        "ms": 19.079399999998714,
+        "ids": [
+          "product_c92a5290ff2362b3daeab64f",
+          "product_91389e22069230f68df4585f",
+          "product_76153f8bf9ed5575601978bd"
+        ]
+      },
+      {
+        "query": "دوربین کانن",
+        "round": 4,
+        "ms": 411.4357999999993,
+        "ids": [
+          "product_f99dcc28f5b48455e2a5cae1",
+          "product_3682d3d7a0cf214bcdf3fe02",
+          "product_5d4023f4787c55fe5bd75ba3"
+        ]
+      },
+      {
+        "query": "گوشی ZX999999",
+        "round": 4,
+        "ms": 2.0890999999974156,
+        "ids": []
+      }
+    ]
+  },
+  "agent": {
+    "n": 20,
+    "p50_ms": 1864.38,
+    "p95_ms": 2491.2,
+    "max_ms": 5590.58,
+    "model_used": 20,
+    "scope": "One constrained native tool extraction plus actual catalogue retrieval; not a stock check or entire purchase journey.",
+    "rows": [
+      {
+        "input": "Anker R50i A3949",
+        "query": "Anker R50i A3949",
+        "model_used": true,
+        "ms": 5590.577299999997,
+        "ids": [
+          "product_92ac53fa75e18e8e73f20b56",
+          "product_2d2917467fe1c75845ee81b6",
+          "product_32aebe319cb4f35246007838"
+        ]
+      },
+      {
+        "input": "R50i NC A3959",
+        "query": "R50i NC A3959",
+        "model_used": true,
+        "ms": 2224.8064000000013,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_258ab3af212a1f8bc4cde006",
+          "product_51f620f1a020f1e500796cac"
+        ]
+      },
+      {
+        "input": "سامسونگ S25 FE 256/8",
+        "query": "سامسونگ S25 FE 256/8",
+        "model_used": true,
+        "ms": 2491.2027000000016,
+        "ids": [
+          "product_6c62d575e3d247f6f29e051a",
+          "product_f07ef205504b7ab37b60b509"
+        ]
+      },
+      {
+        "input": "QCY T13",
+        "query": "QCY T13",
+        "model_used": true,
+        "ms": 1157.5664000000033,
+        "ids": [
+          "product_0bcba67064b477a8b5b301ab",
+          "product_13d580cf0c8de6cfcbd76e94",
+          "product_a0b9dc5ecc796b0f79a33cf3"
+        ]
+      },
+      {
+        "input": "samsung a55",
+        "query": "samsung a55",
+        "model_used": true,
+        "ms": 2248.0426000000007,
+        "ids": [
+          "product_7e45a68470197fc3a71fa424",
+          "product_e473e271212fc69b5cee4502",
+          "product_1c8941b05dc129d4a07a096a"
+        ]
+      },
+      {
+        "input": "شیائومی Redmi Note 13",
+        "query": "شیائومی Redmi Note 13",
+        "model_used": true,
+        "ms": 2426.9820000000036,
+        "ids": [
+          "product_d2e4cd28c7fe43649829e7f4",
+          "product_833e00af7724e8ee58101f9c",
+          "product_9754cfe3330a5813d5b7a31e"
+        ]
+      },
+      {
+        "input": "آیفون 13",
+        "query": "آیفون 13",
+        "model_used": true,
+        "ms": 2126.5112999999983,
+        "ids": [
+          "product_81c7c9265f4b611f84831637",
+          "product_3707aca19aba8c2b902da438",
+          "product_24bda74bba9b4e6f9b806f75"
+        ]
+      },
+      {
+        "input": "هندزفری",
+        "query": "هندزفری",
+        "model_used": true,
+        "ms": 1860.037400000001,
+        "ids": [
+          "product_13f930f4c1400c7ab7bfa61f",
+          "product_24e20485148d72cb2f46305d",
+          "product_258ab3af212a1f8bc4cde006"
+        ]
+      },
+      {
+        "input": "گوشی برای عکاسی",
+        "query": "گوشی",
+        "model_used": true,
+        "ms": 1864.3807000000015,
+        "ids": [
+          "product_8a5e2b2558365b61e3791515",
+          "product_412f296c50498824c504407c",
+          "product_64c3b6d5fbc163fedaa14ed4"
+        ]
+      },
+      {
+        "input": "لپ تاپ دانشجویی",
+        "query": "لپ تاپ دانشجویی",
+        "model_used": true,
+        "ms": 2483.149900000004,
+        "ids": [
+          "product_cf55295b9962e0077a843c07",
+          "product_38a6a90b7a47a846e6a890d2",
+          "product_376ee35da291d727838dfebd"
+        ]
+      },
+      {
+        "input": "کفش چرم",
+        "query": "کفش چرم",
+        "model_used": true,
+        "ms": 2420.0067000000054,
+        "ids": [
+          "product_312b7cc83df739d2384deed1",
+          "product_23baea80e86d7a8e159336f5",
+          "product_6acdf5805f4481c8da009158"
+        ]
+      },
+      {
+        "input": "تلویزیون",
+        "query": "تلویزیون",
+        "model_used": true,
+        "ms": 2312.1738999999943,
+        "ids": [
+          "product_2b26b9cf3b3279ce39630a32",
+          "product_aca4f048cfb9933717c94609",
+          "product_e45d8a189fd6603867831c38"
+        ]
+      },
+      {
+        "input": "یخچال",
+        "query": "یخچال",
+        "model_used": true,
+        "ms": 1609.0838000000003,
+        "ids": [
+          "product_a112c972266b57d0f7eddeab",
+          "product_9798899837231efb551da550",
+          "product_3139e210f468d310c1df9d65"
+        ]
+      },
+      {
+        "input": "کابل USB C",
+        "query": "کابل USB C",
+        "model_used": true,
+        "ms": 1827.770700000001,
+        "ids": [
+          "product_417d433ecc799253fe6c782f",
+          "product_1589fca9488dedb573ed8d79",
+          "product_9e1f3ff99d2f4d7c255c7210"
+        ]
+      },
+      {
+        "input": "اسپیکر بلوتوثی",
+        "query": "اسپیکر بلوتوثی",
+        "model_used": true,
+        "ms": 1535.0369999999966,
+        "ids": [
+          "product_241eb5d0978b4382eddeeddf",
+          "product_b3651ef4cfef6552bd91889c",
+          "product_d73024f4f3f2c05aa9cb6307"
+        ]
+      },
+      {
+        "input": "هدفون برای مکالمه",
+        "query": "هدفون",
+        "model_used": true,
+        "ms": 2021.3911000000007,
+        "ids": [
+          "product_a0b9dc5ecc796b0f79a33cf3",
+          "product_e372fa27c7d7c5c171c14858",
+          "product_0b67b5b491a96d23c5ec9d2a"
+        ]
+      },
+      {
+        "input": "سامسونگ s24 ultra",
+        "query": "سامسونگ S24 Ultra",
+        "model_used": true,
+        "ms": 1405.8892999999953,
+        "ids": [
+          "product_7e73e6f8c8744b15e57a56fd",
+          "product_0677a5e0aea2769353d9b69c",
+          "product_1555cf093924bbee40cb9ec7"
+        ]
+      },
+      {
+        "input": "پاوربانک انکر",
+        "query": "پاوربانک انکر",
+        "model_used": true,
+        "ms": 1181.8194999999978,
+        "ids": [
+          "product_c92a5290ff2362b3daeab64f",
+          "product_91389e22069230f68df4585f",
+          "product_76153f8bf9ed5575601978bd"
+        ]
+      },
+      {
+        "input": "دوربین کانن",
+        "query": "دوربین کانن",
+        "model_used": true,
+        "ms": 1632.571100000001,
+        "ids": [
+          "product_f99dcc28f5b48455e2a5cae1",
+          "product_3682d3d7a0cf214bcdf3fe02",
+          "product_5d4023f4787c55fe5bd75ba3"
+        ]
+      },
+      {
+        "input": "گوشی ZX999999",
+        "query": "گوشی ZX999999",
+        "model_used": true,
+        "ms": 1442.2875000000058,
+        "ids": []
+      }
+    ]
+  }
+}

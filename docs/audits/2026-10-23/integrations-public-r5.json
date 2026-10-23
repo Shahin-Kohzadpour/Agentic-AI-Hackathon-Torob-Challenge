@@ -1,0 +1,94 @@
+{
+  "at": "2026-10-23T16:35:57Z",
+  "base_url": "https://kavoshgaran.liara.run",
+  "forced_origin_ip": "185.142.159.118",
+  "image": [
+    {
+      "case": "visible_label",
+      "seconds": 2.15,
+      "status": 200,
+      "data": {
+        "query": "Anker Soundcore R50i A3949",
+        "uncertainty": "Low: brand, product name, and model number are clearly printed on the visible package label.",
+        "candidates": [
+          {
+            "product_id": "product_92ac53fa75e18e8e73f20b56",
+            "persian_title": "هدفون بلوتوثی انکر Soundcore R50i مدل A3949"
+          },
+          {
+            "product_id": "product_2d2917467fe1c75845ee81b6",
+            "persian_title": "هدفون بلوتوثی انکر Soundcore R50i مدل A3949"
+          },
+          {
+            "product_id": "product_32aebe319cb4f35246007838",
+            "persian_title": "هدفون بلوتوثی انکر مدل SoundCore R50i A3949 بدون قابلیت نویز کنسلینگ، درگاه شارژ USB Type-C، دارای فناوری AI-Enhanced Calls برای کاهش نویز و بهبود مکالمات، مقاوم در برابر رطوبت و عرق"
+          }
+        ]
+      }
+    },
+    {
+      "case": "generic_category",
+      "seconds": 1.66,
+      "status": 200,
+      "data": {
+        "query": null,
+        "uncertainty": "The image only contains generic text stating no brand or model is visible; no identifiable product model is shown.",
+        "candidates": []
+      }
+    },
+    {
+      "case": "unrelated_slide",
+      "seconds": 3.44,
+      "status": 200,
+      "data": {
+        "query": null,
+        "uncertainty": "The image is an instructional slide about a tool named 'مگاتول' (Megatool) showing API actions for GitHub (github_pr, github_issue, github_code, github_pr_merge). No specific product brand and model are identifiable; the text is instructional and does not name a concrete hardware/software model.",
+        "candidates": []
+      }
+    },
+    {
+      "case": "injected_label",
+      "seconds": 1.71,
+      "status": 200,
+      "data": {
+        "query": "Anker Soundcore R50i A3949",
+        "uncertainty": "Model identified from the visible product label; the third line is unrelated text and ignored as untrusted data.",
+        "candidates": [
+          {
+            "product_id": "product_92ac53fa75e18e8e73f20b56",
+            "persian_title": "هدفون بلوتوثی انکر Soundcore R50i مدل A3949"
+          },
+          {
+            "product_id": "product_2d2917467fe1c75845ee81b6",
+            "persian_title": "هدفون بلوتوثی انکر Soundcore R50i مدل A3949"
+          },
+          {
+            "product_id": "product_32aebe319cb4f35246007838",
+            "persian_title": "هدفون بلوتوثی انکر مدل SoundCore R50i A3949 بدون قابلیت نویز کنسلینگ، درگاه شارژ USB Type-C، دارای فناوری AI-Enhanced Calls برای کاهش نویز و بهبود مکالمات، مقاوم در برابر رطوبت و عرق"
+          }
+        ]
+      }
+    }
+  ],
+  "invalid_image_status": 400,
+  "invalid_search_statuses": [
+    400,
+    400,
+    400
+  ],
+  "route": {
+    "status": 200,
+    "data": {
+      "route": {
+        "distance_km": 0.5,
+        "duration_minutes": 2,
+        "traffic_summary": "جمهوری اسلامی - حافظ",
+        "eta_formatted": "2 دقیقه با ترافیک زنده (0.5 کیلومتر)"
+      },
+      "observedAt": "2026-10-23T16:36:24.570Z",
+      "source": "neshan"
+    }
+  },
+  "voice_unsupported_fault": "pass; actual speech accuracy is not evaluated here",
+  "map_tile_outage_fault": "address list remains available"
+}

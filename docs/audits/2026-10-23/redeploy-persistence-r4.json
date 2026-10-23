@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-23T15:14:07Z",
+  "url": "https://kavoshgaran.liara.run",
+  "forced_origin_ip": "185.142.159.118",
+  "checks": {
+    "same_session": true,
+    "same_preferences": true,
+    "same_visit_check": true,
+    "same_offer": true,
+    "same_events": true
+  },
+  "health": {
+    "status": "ready",
+    "catalogue": "available",
+    "counts": {
+      "shops": 6476,
+      "products": 225903,
+      "offers": 331506
+    },
+    "workflow": "persistent",
+    "release": "kavoshgaran-2026-10-23-r4",
+    "at": "2026-10-23T15:14:07.244Z"
+  }
+}

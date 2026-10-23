@@ -11,6 +11,8 @@ export function getDatabase(): DatabaseSync {
 
   // Determine path
   const candidatePaths = [
+    ...(process.env.CATALOGUE_PATH ? [process.env.CATALOGUE_PATH] : []),
+    ...(process.env.DATA_DIR ? [path.join(process.env.DATA_DIR, "torob.db")] : []),
     path.join(process.cwd(), "data", "torob.db"),
     path.join(process.cwd(), "..", "data", "torob.db"),
     path.resolve(__dirname, "..", "..", "data", "torob.db"),
@@ -32,6 +34,7 @@ export function getDatabase(): DatabaseSync {
     }
   }
 
-  dbInstance = new DatabaseSync(dbPath, { open: true });
+  dbInstance = new DatabaseSync(dbPath, { open: true, readOnly: true });
+  dbInstance.exec("PRAGMA busy_timeout = 5000; PRAGMA foreign_keys = ON;");
   return dbInstance;
 }

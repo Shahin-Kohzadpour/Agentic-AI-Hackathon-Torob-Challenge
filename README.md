@@ -1,12 +1,64 @@
-# Agentic AI Hackathon — Torob Challenge
+# کاوشگران — دستیار خرید حضوری ترب
 
-Planning documents for a Persian in-person shopping assistant using the supplied Torob dataset.
+دستیار فارسی برای انتخاب محصول، مقایسهٔ آفرهای واقعی دیتاست، پیدا کردن فروشگاه در تهران، پیگیری شبیه‌سازی‌شده و ساخت کارت مراجعه.
 
-- [Persian overview](docs/plans/START-HERE-fa.md)
-- [Complete strategy and execution plan](docs/plans/WINNING-PLAN.md)
-- [Coding-agent prompts](docs/plans/AGENT-PROMPTS.md)
-- [Dataset findings](docs/plans/DATA-FINDINGS.md)
-- [Additional training decisions](docs/plans/TRAINING-NOTES-DECISIONS.md)
-- [All planning artifacts and reference attachments](docs/plans/README.md)
+**نسخهٔ عمومی:** https://kavoshgaran.liara.run · **دموی قابل بازنشانی:** https://kavoshgaran.liara.run/demo
 
-The original dataset ZIP is not included. These documents describe proposed implementation and validation; they do not claim a completed application.
+تجربهٔ اصلی **موبایل و لمسی** است: فیلترهای جمع‌شونده، پیام ثابت پایین صفحه، کارت‌های خوانا، مقایسهٔ مشخصات، بودجه/منطقه/شعاع/زمان/ترب‌پی، نقشه و مسیریابی نشان، خواندن برچسب از تصویر و تاریخچهٔ تصمیم. روی نمایشگر بزرگ هم همان قاب گوشی ارائه می‌شود. جست‌وجو و اعتبارسنجی آفرها روی سرور انجام می‌شود؛ مدل اختیار ساخت قیمت، شناسه، موجودی یا شروط خرید را ندارد.
+
+## شفافیت داده
+
+- کاتالوگ کامل: ۶۴۷۶ فروشگاه، ۲۲۵۹۰۳ محصول و ۳۳۱۵۰۶ آفر؛ منبع، دیتاست چالش ترب است.
+- بیشتر نام‌های فروشگاه و همهٔ شماره‌ها در دیتاست ساختگی‌اند. شمارهٔ ساختگی برای تماس نمایش داده نمی‌شود.
+- قیمت ثبت‌شده و زمان تغییر آن با موجودی زنده متفاوت‌اند. قیمت صفر/نامعتبر پیشنهاد ارزان محسوب نمی‌شود.
+- ارتباط با فروشنده **شبیه‌سازی** است؛ کارت مراجعه تأیید واقعی یا رزرو کالا نیست. این روش طبق توضیحات داوران مجاز است.
+- راهنمای مراکز خرید از داده و منابع بیرونیِ لینک‌شده می‌آید؛ پیشنهاد محدوده، اثبات موجودی کالا نیست.
+- صوت به پشتیبانی SpeechRecognition مرورگر وابسته است؛ تایپ همیشه در دسترس است. عکس با سرویس واقعی تحلیل می‌شود و نتیجه پیش از ارسال قابل ویرایش است.
+
+## اجرای محلی
+
+Node.js 24 و Python 3 لازم‌اند. سه CSV اصلی چالش (`shops.csv`, `products.csv`, `offers.csv`) را در یک پوشه قرار دهید. دیتاست و کلیدهای سرویس در Git قرار نمی‌گیرند.
+
+```sh
+npm ci
+python scripts/import_dataset.py --csv-dir /path/to/csv --db data/torob.db
+```
+
+فایل `.env.example` را در `.env.local` کپی و مقادیر واقعی را خارج از Git تنظیم کنید. برای جست‌وجوی مستقل از مدل `AGENT_OFFLINE=1` قابل استفاده است؛ در حالت عادی DeepSeek و نشان در زمان اجرا از env خوانده می‌شوند.
+
+```sh
+npm run dev
+```
+
+برای نسخهٔ تولید: `npm run build` و سپس `npm start`. دیتابیس کاتالوگ فقط خواندنی و `workflow.db` برای نشست‌ها/بررسی‌ها قابل نوشتن است. `DATA_DIR` محل وضعیت پایدار و `CATALOGUE_PATH` مسیر اختیاری کاتالوگ است. import روی فایل موجود متوقف می‌شود؛ `--replace` صریح ابتدا یک backup سازگار می‌سازد.
+
+## آزمون و انتشار
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build
+python -m pip install -r requirements-dev.txt
+python -m playwright install chromium
+python scripts/test_mobile.py
+python scripts/test_integrations.py
+```
+
+آزمون‌های سرویس به دیتاست کامل نیاز دارند. آزمون مرورگر به‌طور پیش‌فرض `http://127.0.0.1:3107` را هدف می‌گیرد؛ `TEST_BASE_URL` قابل تغییر است. آزمون integration سرویس‌های واقعی مدل/تصویر/نشان را مصرف می‌کند. کنترل کیفیت GitHub، lint/typecheck/build را بدون نیاز به دیتاست اجرا می‌کند.
+
+برای Docker ابتدا `python scripts/prepare_seed.py --source data/torob.db` را اجرا کنید؛ سپس `docker compose up --build`. seed شامل دادهٔ کامل است و باید در محیط مجاز چالش ساخته شود. در لیارا دیسک `catalogue` روی `/app/data` متصل است؛ startup کاتالوگ نسخه‌دار را از seed مقداردهی می‌کند و نسخه‌های قبلی را حفظ می‌کند. قبل از شروع سرور، از وضعیت موجود با SQLite backup API snapshot می‌گیرد. اجرای دستی: `node scripts/backup.cjs`.
+
+`GET /api/health` آمادگی SQLite، تعداد رکوردها و نسخهٔ انتشار را نشان می‌دهد. قطع مدل یا نشان، آمادگی کاتالوگ را با خطای آن سرویس اشتباه نمی‌گیرد. محدودسازی درخواست داخل همان replica است؛ معماری فعلی برای یک replica با دیسک پایدار طراحی شده است.
+
+## مستندات و شواهد
+
+- [پلن اولویت‌بندی امتیازها](docs/plans/ROADMAP-MAX-SCORE-fa.md)
+- [بک‌لاگ اجرا](docs/plans/EXECUTION-BACKLOG-fa.md) و [۴۰ سناریوی پذیرش](docs/plans/ACCEPTANCE-MAX-SCORE-fa.md)
+- [ممیزی وضعیت اولیه](docs/audits/2026-10-23/IMPLEMENTATION-AUDIT-fa.md)
+- [معماری و تصمیم‌ها](docs/delivery/ARCHITECTURE-fa.md)
+- [تجربهٔ موبایل و محدودهٔ آزمون](docs/delivery/MOBILE-FIRST-fa.md)
+- [متن سناریوی ویدئوی حدود پنج دقیقه](docs/delivery/DEMO-SCRIPT-fa.md)
+- [تطبیق توضیحات مسئول چالش و پاسخ‌های داوران](docs/delivery/REQUIREMENTS-CLARIFICATIONS-fa.md)
+
+ارزیابی نهایی و امتیازدهی در اختیار داوران است. ارسال ویدئوی دمو برای پذیرش اثر الزامی است؛ انتشار سایت جای ارسال اثر در فرم برگزارکننده را نمی‌گیرد.
