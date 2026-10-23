@@ -1,385 +1,59 @@
 "use client";
-
-import React, { useState, useRef, useEffect } from "react";
-import { Send, RotateCcw, SlidersHorizontal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ChevronDown, Headphones, MessageSquare, RotateCcw, Search, Send, ShieldCheck, Smartphone, Store, X } from "lucide-react";
+import type { WorkflowSnapshot } from "@/lib/workflow";
+import PreferencePanel from "./PreferencePanel";
+import ShoppingCanvas from "./ShoppingCanvas";
 import VoiceInput from "./VoiceInput";
 import ImageInput from "./ImageInput";
-import NeedClarification from "../generative-ui/NeedClarification";
-import ProductComparison from "../generative-ui/ProductComparison";
-import StoreResults from "../generative-ui/StoreResults";
-import SellerCheckProgress from "../generative-ui/SellerCheckProgress";
-import VisitPlanCard from "../generative-ui/VisitPlanCard";
-import NoMatchAreaSuggestion from "../generative-ui/NoMatchAreaSuggestion";
-import { UIComponentPayload } from "@/types/generative-ui";
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  uiComponent?: UIComponentPayload;
-}
-
-export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "m_welcome",
-      role: "assistant",
-      content:
-        "سلام! برای شروع خرید حضوری در تهران، نام کالا یا مدل مد نظرتان را بفرمایید یا یکی از دسته‌بندی‌های زیر را انتخاب کنید:",
-      uiComponent: {
-        type: "NeedClarification",
-        props: {
-          question: "برای شروع، کدام رده کالا را مد نظر دارید؟",
-          field: "use_case",
-          options: [
-            "کفش و پوشاک در مراکز خرید تهران",
-            "گوشی موبایل و لوازم جانبی",
-            "لپ‌تاپ و تجهیزات دیجیتال",
-            "هدفون و ساعت هوشمند",
-          ],
-        },
-      },
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [userLocation, setUserLocation] = useState({
-    lat: 35.6948,
-    lon: 51.4089,
-    name: "تهران، محدوده جمهوری / شیخ هادی",
-  });
-
-  const chatBottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]);
-
-  const sendMessage = async (text: string) => {
-    if (!text.trim() || isLoading) return;
-
-    const userMsg: Message = {
-      id: `user_${Date.now()}`,
-      role: "user",
-      content: text,
-    };
-
-    const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
-    setInput("");
-    setIsLoading(true);
-
-    try {
-      const resp = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
-          userLocation,
-        }),
-      });
-
-      const data = await resp.json();
-
-      const assistantMsg: Message = {
-        id: `assistant_${Date.now()}`,
-        role: "assistant",
-        content: data.textResponse || "اطلاعات با موفقیت آماده شد.",
-        uiComponent: data.uiComponent,
-      };
-
-      setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err) {
-      console.error(err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err_${Date.now()}`,
-          role: "assistant",
-          content: "خطایی در پردازش رخ داد، لطفاً دوباره امتحان کنید.",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSelectProduct = async (productId: string, productTitle: string) => {
-    await sendMessage(`مدل «${productTitle}» را انتخاب کردم. فروشگاه‌های حضوری موجود در تهران را نمایش بده.`);
-  };
-
-  const [activeCheckContext, setActiveCheckContext] = useState<{
-    offerId: string;
-    shopName: string;
-    sellerTitle: string;
-    priceToman: number;
-    replacementShopName?: string;
-  } | null>(null);
-
-  const handleStartSellerCheck = async (
-    offerId: string,
-    shopName: string,
-    sellerTitle: string,
-    priceToman: number,
-    isBackup: boolean = false
-  ) => {
-    setIsLoading(true);
-    try {
-      const resp = await fetch("/api/seller-check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          offerId,
-          shopName,
-          sellerTitle,
-          priceToman,
-          isBackup,
-        }),
-      });
-      const job = await resp.json();
-
-      setActiveCheckContext({
-        offerId,
-        shopName,
-        sellerTitle,
-        priceToman,
-        replacementShopName: job.replacement_shop_name,
-      });
-
-      const checkMsg: Message = {
-        id: `check_${Date.now()}`,
-        role: "assistant",
-        content: isBackup
-          ? `استعلام از فروشگاه جایگزین (${shopName}) آغاز شد.`
-          : `استعلام شبیه‌سازی‌شده وضعیت موجودی از فروشگاه «${shopName}» در حال انجام است:`,
-        uiComponent: {
-          type: "SellerCheckProgress",
-          props: job,
-        },
-      };
-      setMessages((prev) => [...prev, checkMsg]);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSelectBackupStore = () => {
-    if (activeCheckContext?.replacementShopName) {
-      handleStartSellerCheck(
-        `backup_${Date.now()}`,
-        activeCheckContext.replacementShopName,
-        activeCheckContext.sellerTitle,
-        activeCheckContext.priceToman,
-        true
-      );
-    }
-  };
-
-  const handleGenerateVisitPlan = async () => {
-    if (activeCheckContext) {
-      await sendMessage(
-        `استعلام موجودی «${activeCheckContext.sellerTitle}» از فروشگاه «${activeCheckContext.shopName}» با موفقیت تأیید شد. کارت نهایی مراجعه حضوری و مسیر را نمایش بده.`
-      );
-    }
-  };
-
-  const resetSession = () => {
-    setMessages([
-      {
-        id: "m_welcome",
-        role: "assistant",
-        content:
-          "سلام! برای شروع خرید حضوری در تهران، نام کالا یا مدل مد نظرتان را بفرمایید یا یکی از دسته‌بندی‌های زیر را انتخاب کنید:",
-        uiComponent: {
-          type: "NeedClarification",
-          props: {
-            question: "برای شروع، کدام رده کالا را مد نظر دارید؟",
-            field: "use_case",
-            options: [
-              "کفش و پوشاک در مراکز خرید تهران",
-              "گوشی موبایل و لوازم جانبی",
-              "لپ‌تاپ و تجهیزات دیجیتال",
-              "هدفون و ساعت هوشمند",
-            ],
-          },
-        },
-      },
-    ]);
-  };
-
-  return (
-    <div className="mobile-viewport">
-      {/* Native App Style Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-neutral-200/80 px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-torob-red flex items-center justify-center text-white font-extrabold text-sm shadow-xs">
-            ترب
-          </div>
-          <div>
-            <h1 className="font-bold text-neutral-900 text-xs sm:text-sm leading-tight">
-              دستیار خرید حضوری
-            </h1>
-            <span className="text-[10px] text-neutral-400">تهران • کاتالوگ جامع</span>
-          </div>
-        </div>
-
-        <button
-          onClick={resetSession}
-          className="p-1.5 text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
-          title="شروع دوباره"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
-      </header>
-
-      {/* Chat Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5">
-        {/* Entrance Cards (at start) */}
-        {messages.length === 1 && (
-          <div className="grid grid-cols-1 gap-2 pt-1">
-            <button
-              onClick={() =>
-                sendMessage(
-                  "برای رفت‌وآمد یک هندزفری باکیفیت می‌خواهم با بودجه ۴٫۲ میلیون تومان و ترب‌پی حضوری در جمهوری"
-                )
-              }
-              className="text-right p-3 bg-neutral-50 hover:bg-red-50/50 hover:border-torob-red/30 rounded-xl border border-neutral-200 transition-all flex items-center justify-between group active:scale-98"
-            >
-              <div>
-                <span className="font-bold text-xs text-neutral-900 block group-hover:text-torob-red mb-0.5">
-                  «کمکم کن انتخاب کنم»
-                </span>
-                <span className="text-[11px] text-neutral-500">
-                  پیشنهاد ۳ مدل برتر متناسب با بودجه و نیاز شما
-                </span>
-              </div>
-              <span className="text-sm">🎯</span>
-            </button>
-
-            <button
-              onClick={() =>
-                sendMessage(
-                  "مدل Anker Soundcore R50i؛ نزدیک‌ترین فروشگاه حضوری دارای ترب‌پی در تهران کجاست؟"
-                )
-              }
-              className="text-right p-3 bg-neutral-50 hover:bg-neutral-100 rounded-xl border border-neutral-200 transition-all flex items-center justify-between group active:scale-98"
-            >
-              <div>
-                <span className="font-bold text-xs text-neutral-900 block mb-0.5">
-                  «مدلم را می‌دانم»
-                </span>
-                <span className="text-[11px] text-neutral-500">
-                  استعلام قیمت و موجودی مدل مدنظر در فروشگاه‌های تهران
-                </span>
-              </div>
-              <span className="text-sm">🔍</span>
-            </button>
-          </div>
-        )}
-
-        {/* Messages */}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col ${msg.role === "user" ? "items-start" : "items-end"}`}
-          >
-            <div
-              className={`max-w-[90%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed ${
-                msg.role === "user"
-                  ? "bg-torob-red text-white rounded-tr-xs"
-                  : "bg-neutral-100 text-neutral-800 rounded-tl-xs"
-              }`}
-            >
-              {msg.content}
-            </div>
-
-            {/* Generative UI Components */}
-            {msg.uiComponent && (
-              <div className="w-full">
-                {msg.uiComponent.type === "NeedClarification" && (
-                  <NeedClarification
-                    data={msg.uiComponent.props}
-                    onSelectOption={(opt) => sendMessage(opt)}
-                  />
-                )}
-
-                {msg.uiComponent.type === "ProductComparison" && (
-                  <ProductComparison
-                    data={msg.uiComponent.props}
-                    onSelectProduct={handleSelectProduct}
-                  />
-                )}
-
-                {msg.uiComponent.type === "StoreResults" && (
-                  <StoreResults
-                    data={msg.uiComponent.props}
-                    onStartSellerCheck={handleStartSellerCheck}
-                  />
-                )}
-
-                {msg.uiComponent.type === "SellerCheckProgress" && (
-                  <SellerCheckProgress
-                    data={msg.uiComponent.props}
-                    onSelectBackupStore={handleSelectBackupStore}
-                    onGenerateVisitPlan={handleGenerateVisitPlan}
-                  />
-                )}
-
-                {msg.uiComponent.type === "VisitPlan" && (
-                  <VisitPlanCard data={msg.uiComponent.props} />
-                )}
-
-                {msg.uiComponent.type === "NoMatchAreaSuggestion" && (
-                  <NoMatchAreaSuggestion data={msg.uiComponent.props} />
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex items-center gap-1.5 p-2.5 bg-neutral-100 rounded-xl w-max text-xs text-neutral-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-torob-red animate-ping" />
-            <span>در حال بررسی...</span>
-          </div>
-        )}
-
-        <div ref={chatBottomRef} />
-      </div>
-
-      {/* Native App Style Input Bar */}
-      <div className="sticky bottom-0 z-40 bg-white border-t border-neutral-200/80 p-2.5 pb-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMessage(input);
-          }}
-          className="flex items-center gap-1 bg-neutral-100 rounded-2xl px-2 py-1 border border-neutral-200/90 focus-within:border-neutral-400 focus-within:bg-white transition-all"
-        >
-          <VoiceInput onTranscriptReady={sendMessage} disabled={isLoading} />
-          <ImageInput onImageModelRecognized={sendMessage} disabled={isLoading} />
-
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="چه محصولی مد نظرتان است؟..."
-            disabled={isLoading}
-            className="flex-1 bg-transparent border-none text-xs sm:text-[13px] text-neutral-800 placeholder-neutral-400 focus:outline-none px-1.5 py-1"
-          />
-
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="p-1.5 bg-torob-red hover:bg-torob-darkred text-white rounded-xl disabled:opacity-30 transition-all shrink-0 active:scale-95"
-            title="ارسال"
-          >
-            <Send className="w-3.5 h-3.5 rotate-180" />
-          </button>
-        </form>
-      </div>
+export default function ChatInterface({demoMode=false}:{demoMode?:boolean}) {
+ const [data,setData]=useState<WorkflowSnapshot|null>(null),[input,setInput]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[conversationOpen,setConversationOpen]=useState(false),[entry,setEntry]=useState<"discover"|"direct">("discover");
+ const sequence=useRef(0),controller=useRef<AbortController|null>(null),bottom=useRef<HTMLDivElement>(null),field=useRef<HTMLInputElement>(null);
+ async function reload() {
+  const response=await fetch("/api/workflow",{cache:"no-store"});
+  const next=await response.json();if(!response.ok)throw new Error(next.error||"بارگذاری انجام نشد.");
+  setData(next);return next as WorkflowSnapshot;
+ }
+ useEffect(()=>{reload().catch(e=>setError(e.message));return()=>controller.current?.abort()},[]);
+ useEffect(()=>{bottom.current?.scrollIntoView({block:"nearest",behavior:"smooth"})},[data?.session.messages.length,busy]);
+ useEffect(()=>{
+  if(data?.activeCheck?.status!=="CHECKING"||busy) return;
+  const generation=sequence.current;
+  const timer=setTimeout(async()=>{try {const response=await fetch("/api/workflow",{cache:"no-store"});const next=await response.json();if(response.ok&&sequence.current===generation)setData(next)}catch{setError("دریافت وضعیت بررسی انجام نشد؛ بارگذاری دوباره را بزنید.")}},850);
+  return()=>clearTimeout(timer);
+ },[data,busy]);
+ async function act(action:string,body:Record<string,unknown>={}) {
+  if(!data) return;
+  const generation=++sequence.current;controller.current?.abort();controller.current=new AbortController();
+  setBusy(true);setError("");
+  try {
+   const response=await fetch("/api/workflow",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,version:data.session.version,...body}),signal:controller.current.signal});
+   const next=await response.json();if(generation!==sequence.current)return;
+   if(!response.ok){if(response.status===409)await reload();throw new Error(next.error||"درخواست انجام نشد؛ دوباره تلاش کنید.")}
+   setData(next);if(action==="reset"){setInput("");setConversationOpen(false)}
+  } catch(e) {if(generation===sequence.current&&!(e instanceof Error&&e.name==="AbortError"))setError(e instanceof Error?e.message:"خطای ارتباط؛ دوباره تلاش کنید.")}
+  finally {if(generation===sequence.current)setBusy(false)}
+ }
+ function send(text:string) {if(!text.trim()||busy)return;setInput("");act("chat",{message:text.trim()});}
+ const stage=data?.session.stage||"discover";
+ const steps=[{label:"انتخاب مدل",done:["stores","checking","visit"].includes(stage),active:["discover","products","empty"].includes(stage)},{label:"بررسی فروشگاه",done:stage==="visit",active:["stores","checking"].includes(stage)},{label:"برنامهٔ مراجعه",done:false,active:stage==="visit"}];
+ return <div className="app-shell">
+  <header className="app-header"><a className="brand" href="/" aria-label="دستیار خرید حضوری ترب"><span className="brand-symbol">ترب</span><div><strong>همراه خرید حضوری</strong><span>کاوشگران · انتخاب روشن، پیش از حرکت</span></div></a><div className="header-actions"><span className="data-tag"><Store size={15}/>کاتالوگ تهران</span><button className="icon-button" onClick={()=>act("reset")} title="شروع دوباره" aria-label="شروع دوباره"><RotateCcw size={18}/></button></div></header>
+  <div className="step-strip" aria-label="مراحل خرید">{steps.map((step,index)=><div className={step.active?"step active":step.done?"step done":"step"} key={step.label}><span>{step.done?<ShieldCheck size={16}/>:String(index+1).replace(/\d/g,c=>"۰۱۲۳۴۵۶۷۸۹"[Number(c)])}</span><strong>{step.label}</strong>{index<2&&<ArrowLeft size={14}/>}</div>)}</div>
+  <main className="workspace">
+   <aside className="conversation-panel"><div className="conversation-heading"><div><MessageSquare size={18}/><h1>با هم انتخاب کنیم</h1></div><button className="mobile-conversation-toggle icon-button" aria-expanded={conversationOpen} aria-label="نمایش مکالمه" onClick={()=>setConversationOpen(!conversationOpen)}><ChevronDown size={18}/></button></div>
+    <div className={`conversation-scroll ${conversationOpen?"expanded":""}`}>
+     {!data?.session.messages.length&&<div className="welcome"><p>سلام! نام مدل را می‌دانید یا برای انتخاب کمک می‌خواهید؟</p><div className="entry-options"><button className={entry==="discover"?"selected":""} onClick={()=>{setEntry("discover");field.current?.focus()}}><Headphones size={21}/><strong>کمکم کن انتخاب کنم</strong><span>با نیاز و بودجه شروع کنیم</span></button><button className={entry==="direct"?"selected":""} onClick={()=>{setEntry("direct");field.current?.focus()}}><Search size={21}/><strong>مدلم را می‌دانم</strong><span>نام یا کد دقیق مدل را بنویسید</span></button></div><p className="muted">{entry==="direct"?"کد مدل، ظرفیت یا رنگ را هم بنویسید تا گزینهٔ متفاوت پیشنهاد نشود.":"برای چه کاری خرید می‌کنید و سقف بودجه‌تان چند تومان است؟"}</p><div className="suggestion-chips"><button disabled={busy} onClick={()=>send("هندزفری برای رفت‌وآمد با بودجه ۴٫۲ میلیون تومان و ترب‌پی حضوری می‌خواهم")}><Headphones size={14}/>هندزفری برای رفت‌وآمد</button><button disabled={busy} onClick={()=>send("گوشی برای عکاسی می‌خواهم؛ کمکم کن انتخاب کنم")}><Smartphone size={14}/>گوشی برای عکاسی</button></div></div>}
+     {data?.session.messages.map(message=><div className={`message ${message.role}`} key={message.id}><span className="message-author">{message.role==="user"?"شما":"همراه خرید"}</span><p>{message.text}</p></div>)}
+     {busy&&<div className="working" role="status"><span className="loading-dots"/>در حال بررسی شرایط و کاتالوگ…</div>}<div ref={bottom}/>
     </div>
-  );
+    <div className="composer-area">{error&&<div className="error-banner" role="alert"><p>{error}</p><button aria-label="بستن پیام خطا" onClick={()=>setError("")}><X size={16}/></button><button className="text-button" onClick={()=>reload().catch(e=>setError(e.message))}>بارگذاری دوباره</button></div>}
+     <form className="composer" onSubmit={e=>{e.preventDefault();send(input)}}><label className="sr-only" htmlFor="shopping-message">نیاز یا مدل مورد نظر</label><input id="shopping-message" ref={field} value={input} onChange={e=>setInput(e.target.value)} maxLength={2000} placeholder={entry==="direct"?"نام یا کد مدل، مثلاً R50i A3949":"چه چیزی می‌خواهید بخرید؟"}/><button className="send-button" disabled={!input.trim()||busy||!data} aria-label="ارسال پیام"><Send size={18}/></button></form>
+     <div className="composer-tools"><VoiceInput contextKey={`${data?.session.id}:${data?.session.version}`} onTranscriptReady={send} disabled={busy||!data}/><ImageInput contextKey={`${data?.session.id}:${data?.session.version}`} onImageModelRecognized={query=>{setInput(query);field.current?.focus()}} disabled={busy||!data}/><span>متن صوت و مدل تصویر پیش از ارسال قابل بررسی‌اند.</span></div><p className="composer-disclosure">پیگیری فروشنده در این نسخه شبیه‌سازی‌شده است.</p>
+    </div>
+   </aside>
+   <div className="results-panel">{data?<><PreferencePanel preferences={data.session.preferences} busy={busy} onApply={preferences=>act("preferences",{preferences})}/>{demoMode&&<div className="demo-controls"><label>سناریوی شبیه‌سازی فروشنده<select value={data.session.scenario} onChange={e=>act("scenario",{scenario:e.target.value})}>{[["AUTO","خودکار؛ شکست فروشندهٔ اول دمو"],["AVAILABLE","موجود اعلام شود"],["NO_ANSWER","پاسخ ندهد"],["OUT_OF_STOCK","ناموجود اعلام شود"],["PRICE_CHANGED","قیمت ۱۰٪ افزایش یابد"],["CLOSING","زمان مراجعه نامناسب"],["AMBIGUOUS_VARIANT","واریانت مبهم"]].map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><button className="text-button" onClick={()=>send("Anker Soundcore R50i A3949 با بودجه ۴٫۲ میلیون تومان و ترب‌پی حضوری در جمهوری")}>اجرای نمونهٔ R50i</button></div>}<ShoppingCanvas data={data} busy={busy} act={act}/></>:<div className="initial-loading" role="status">{error||"در حال بارگذاری جلسهٔ خرید…"}</div>}</div>
+  </main>
+ </div>;
 }

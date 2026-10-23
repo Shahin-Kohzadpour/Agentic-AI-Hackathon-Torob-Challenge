@@ -1,116 +1,18 @@
 "use client";
-
-import React, { useState, useRef } from "react";
-import { Image as ImageIcon, X, Sparkles, Check } from "lucide-react";
-
-interface Props {
-  onImageModelRecognized: (modelQuery: string) => void;
-  disabled?: boolean;
-}
-
-export default function ImageInput({ onImageModelRecognized, disabled }: Props) {
-  const [preview, setPreview] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [recognizedModel, setRecognizedModel] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreview(reader.result as string);
-      setIsProcessing(true);
-
-      // Extract model candidate from image (for demo recognition)
-      setTimeout(() => {
-        setIsProcessing(false);
-        setRecognizedModel("Anker Soundcore R50i A3949");
-      }, 1200);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleConfirm = () => {
-    if (recognizedModel) {
-      onImageModelRecognized(recognizedModel);
-      handleCancel();
-    }
-  };
-
-  const handleCancel = () => {
-    setPreview(null);
-    setRecognizedModel(null);
-    setIsProcessing(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  return (
-    <div className="relative inline-flex items-center">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={disabled}
-        title="ورودی عکس محصول (تصویر/جعبه کالا)"
-        className="p-2 text-gray-500 hover:text-torob-red hover:bg-red-50 rounded-xl transition-all"
-      >
-        <ImageIcon className="w-5 h-5" />
-      </button>
-
-      {/* Preview & Recognition Dialog */}
-      {preview && (
-        <div className="absolute bottom-12 right-0 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-3 z-50 animate-in fade-in slide-in-from-bottom-2">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-1.5 mb-2">
-            <span className="text-[11px] font-bold text-gray-700">تشخیص هوشمند مدل از تصویر:</span>
-            <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="relative w-full h-32 bg-gray-100 rounded-xl overflow-hidden mb-2.5 flex items-center justify-center">
-            <img src={preview} alt="Upload preview" className="h-full object-contain" />
-            {isProcessing && (
-              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-xs gap-1">
-                <Sparkles className="w-5 h-5 animate-spin text-amber-400" />
-                <span>در حال تحلیل تصویر و تطبیق با کاتالوگ...</span>
-              </div>
-            )}
-          </div>
-
-          {recognizedModel && (
-            <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-900 text-xs mb-2">
-              <span className="text-[10px] text-emerald-700 block">مدل شناسایی‌شده در کاتالوگ ترب:</span>
-              <span className="font-bold">{recognizedModel}</span>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-1.5">
-            <button
-              onClick={handleCancel}
-              className="px-2 py-1 text-[11px] text-gray-500 hover:bg-gray-100 rounded-lg"
-            >
-              انصراف
-            </button>
-            <button
-              onClick={handleConfirm}
-              disabled={isProcessing}
-              className="px-3 py-1 bg-torob-red hover:bg-torob-darkred text-white text-[11px] font-bold rounded-lg flex items-center gap-1 disabled:opacity-50"
-            >
-              <Check className="w-3 h-3" />
-              <span>جستجوی این مدل</span>
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+import {useEffect,useRef,useState} from "react";
+import {Image as ImageIcon,X,Search} from "lucide-react";
+export default function ImageInput({onImageModelRecognized,disabled,contextKey}:{onImageModelRecognized:(query:string)=>void;disabled?:boolean;contextKey?:string}){
+ const fileRef=useRef<HTMLInputElement>(null),request=useRef<AbortController|null>(null),generation=useRef(0);
+ const [preview,setPreview]=useState<string|null>(null),[query,setQuery]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[candidates,setCandidates]=useState<Array<{product_id:string;persian_title:string}>>([]);
+ function cancel(){generation.current++;request.current?.abort();setPreview(null);setQuery("");setBusy(false);setError("");setCandidates([]);if(fileRef.current)fileRef.current.value="";}
+ useEffect(()=>{generation.current++;request.current?.abort();setPreview(null);setQuery("");setCandidates([]);setBusy(false);setError("");return()=>{request.current?.abort()}},[contextKey]);
+ async function choose(file?:File){
+  if(!file)return;setError("");
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024){setError("فقط JPEG، PNG یا WebP تا ۸ مگابایت پذیرفته می‌شود.");return;}
+  const gen=++generation.current;request.current?.abort();request.current=new AbortController();setBusy(true);setCandidates([]);setQuery("");
+  try {const image=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file)});
+  if(gen!==generation.current)return;setPreview(image);
+  const response=await fetch("/api/image",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image}),signal:request.current.signal});const data=await response.json();if(gen!==generation.current)return;if(!response.ok)throw new Error(data.error||"تحلیل تصویر انجام نشد.");setQuery(data.query||"");setCandidates(data.candidates||[]);if(!data.query)setError("مدل دقیق از تصویر مشخص نشد؛ نام یا کد مدل را وارد کنید.")}catch(e){if(gen===generation.current&&!(e instanceof Error&&e.name==="AbortError"))setError(e instanceof Error?e.message:"تصویر قابل بررسی نبود؛ مدل را تایپ کنید.")}finally{if(gen===generation.current)setBusy(false)}
+ }
+ return <div className="media-control"><input ref={fileRef} type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" onChange={e=>choose(e.target.files?.[0])}/><button type="button" className="icon-button" disabled={disabled} onClick={()=>fileRef.current?.click()} title="عکس محصول" aria-label="عکس محصول"><ImageIcon size={19}/></button>{(preview||error)&&<div className="media-popover" role="dialog" aria-label="بررسی عکس محصول"><div className="section-heading"><strong>مدل تصویر را تأیید کنید</strong><button type="button" className="icon-button" aria-label="بستن عکس" onClick={cancel}><X size={17}/></button></div>{preview&&<img className="media-preview" src={preview} alt="پیش‌نمایش تصویر انتخابی"/>}{busy&&<p role="status">در حال خواندن برند و مدل؛ نتیجه قطعی نیست…</p>}{error&&<p className="error-text" role="status">{error}</p>}{candidates.map(c=><button type="button" className="image-candidate" key={c.product_id} onClick={()=>setQuery(c.persian_title)}>{c.persian_title}</button>)}<label>نام یا کد مدل، قابل اصلاح<input value={query} maxLength={200} onChange={e=>setQuery(e.target.value)}/></label><p className="muted">عکس، موجودی، قیمت یا اصالت کالا را تأیید نمی‌کند. متن تصویر نمی‌تواند شروط خرید را تغییر دهد.</p><button type="button" className="button button-small" disabled={busy||!query.trim()} onClick={()=>{onImageModelRecognized(query.trim());cancel()}}><Search size={16}/>قرار دادن مدل در کادر پیام</button></div>}</div>;
 }

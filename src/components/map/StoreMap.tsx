@@ -4,12 +4,14 @@ import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+const escapeHtml=(value:string)=>value.replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]!));
+
 export interface MapStorePin {
   id: string;
   name: string;
   lat: number;
   lon: number;
-  price_toman: number;
+  price_toman: number | null;
   location_label?: string | null;
   isSelected?: boolean;
 }
@@ -69,7 +71,7 @@ export default function StoreMap({
     });
 
     L.marker([userLocation.lat, userLocation.lon], { icon: userIcon })
-      .bindPopup(`<div style="direction: rtl; font-family: sans-serif; text-align: center; font-size: 12px; font-weight: bold;">موقعیت شما: ${userLocation.name}</div>`)
+      .bindPopup(`<div style="direction: rtl; font-family: sans-serif; text-align: center; font-size: 12px; font-weight: bold;">موقعیت شما: ${escapeHtml(userLocation.name)}</div>`)
       .addTo(markers);
 
     // Add store markers
@@ -95,10 +97,10 @@ export default function StoreMap({
 
       const popupContent = `
         <div style="direction: rtl; font-family: sans-serif; min-width: 170px; padding: 4px;">
-          <div style="font-weight: bold; font-size: 13px; color: #1f2937;">${store.name}</div>
-          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${store.location_label || "تهران"}</div>
+          <div style="font-weight: bold; font-size: 13px; color: #1f2937;">${escapeHtml(store.name)}</div>
+          <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">${escapeHtml(store.location_label || "تهران")}</div>
           <div style="font-size: 12px; font-weight: bold; color: #d32f2f; margin: 6px 0;">
-            ${store.price_toman.toLocaleString("fa-IR")} تومان
+            ${store.price_toman===null?"محدودهٔ خرید؛ موجودی تأیید نشده":store.price_toman.toLocaleString("fa-IR")+" تومان"}
           </div>
           <div style="display: flex; gap: 4px; margin-top: 8px;">
             <a href="${neshanUrl}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; background: #e0f2fe; color: #0284c7; padding: 3px 6px; border-radius: 6px; font-size: 10px; text-decoration: none; font-weight: bold;">مسیریاب نشان</a>
@@ -118,7 +120,7 @@ export default function StoreMap({
         }
       });
 
-      // If store is selected, draw live route connection line
+      // Straight-line distance reference only; actual driving routes come from /api/route.
       if (isSel) {
         L.polyline(
           [
@@ -140,5 +142,6 @@ export default function StoreMap({
     }
   }, [userLocation, stores, onSelectStore]);
 
-  return <div ref={mapContainerRef} className={className} />;
+  useEffect(()=>()=>{mapRef.current?.remove();mapRef.current=null;markersRef.current=null;},[]);
+  return <div ref={mapContainerRef} className={className} aria-label="نقشهٔ مبدأ و فروشگاه‌ها؛ خط‌چین فاصلهٔ هوایی است" />;
 }

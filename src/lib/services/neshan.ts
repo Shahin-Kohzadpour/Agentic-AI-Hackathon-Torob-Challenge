@@ -4,7 +4,7 @@
  * and Pedestrian Navigation APIs.
  */
 
-const NESHAN_SERVICE_KEY = process.env.NESHAN_SERVICE_KEY || "service.NESHAN_SERVICE_KEY_REMOVED";
+const NESHAN_SERVICE_KEY = process.env.NESHAN_SERVICE_KEY || "";
 
 export interface LiveRouteResult {
   distance_km: number;
@@ -35,10 +35,12 @@ export async function getLiveTrafficRoute(
   destLon: number
 ): Promise<LiveRouteResult | null> {
   try {
+    if (!NESHAN_SERVICE_KEY) return null;
     const url = `https://api.neshan.org/v4/direction?type=car&origin=${originLat},${originLon}&destination=${destLat},${destLon}`;
     const resp = await fetch(url, {
       headers: { "Api-Key": NESHAN_SERVICE_KEY },
-      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3500),
+      cache: "no-store",
     });
 
     if (!resp.ok) return null;
@@ -47,12 +49,13 @@ export async function getLiveTrafficRoute(
     if (!data.routes || data.routes.length === 0) return null;
 
     const leg = data.routes[0].legs[0];
-    const distMeters = leg?.distance?.value || 0;
-    const durSeconds = leg?.duration?.value || 0;
+    const distMeters = leg?.distance?.value;
+    const durSeconds = leg?.duration?.value;
+    if(!Number.isFinite(distMeters)||!Number.isFinite(durSeconds)||distMeters<0||durSeconds<0)return null;
     const summary = leg?.summary || "خیابان جمهوری";
 
     const distKm = Math.round((distMeters / 1000) * 10) / 10;
-    const durMin = Math.max(1, Math.round(durSeconds / 60));
+    const durMin = Math.ceil(durSeconds / 60);
 
     return {
       distance_km: distKm,
@@ -60,8 +63,8 @@ export async function getLiveTrafficRoute(
       traffic_summary: summary,
       eta_formatted: `${durMin} دقیقه با ترافیک زنده (${distKm} کیلومتر)`,
     };
-  } catch (error) {
-    console.error("Neshan routing error:", error);
+  } catch {
+    console.warn("Neshan service unavailable");
     return null;
   }
 }
@@ -74,10 +77,12 @@ export async function getPedestrianRoute(
   destLon: number
 ): Promise<PedestrianRouteResult | null> {
   try {
+    if (!NESHAN_SERVICE_KEY) return null;
     const url = `https://api.neshan.org/v4/direction?type=pedestrian&origin=${originLat},${originLon}&destination=${destLat},${destLon}`;
     const resp = await fetch(url, {
       headers: { "Api-Key": NESHAN_SERVICE_KEY },
-      next: { revalidate: 600 },
+      signal: AbortSignal.timeout(3500),
+      cache: "no-store",
     });
 
     if (!resp.ok) return null;
@@ -86,17 +91,18 @@ export async function getPedestrianRoute(
     if (!data.routes || data.routes.length === 0) return null;
 
     const leg = data.routes[0].legs[0];
-    const distMeters = leg?.distance?.value || 0;
-    const durSeconds = leg?.duration?.value || 0;
-    const durMin = Math.max(1, Math.round(durSeconds / 60));
+    const distMeters = leg?.distance?.value;
+    const durSeconds = leg?.duration?.value;
+    if(!Number.isFinite(distMeters)||!Number.isFinite(durSeconds)||distMeters<0||durSeconds<0)return null;
+    const durMin = Math.ceil(durSeconds / 60);
 
     return {
       walking_distance_meters: distMeters,
       walking_duration_minutes: durMin,
       formatted: `${durMin} دقیقه پیاده‌روی (${distMeters} متر)`,
     };
-  } catch (error) {
-    console.error("Neshan pedestrian routing error:", error);
+  } catch {
+    console.warn("Neshan service unavailable");
     return null;
   }
 }
@@ -115,7 +121,8 @@ export async function getBatchDistanceMatrix(
   try {
     const resp = await fetch(url, {
       headers: { "Api-Key": NESHAN_SERVICE_KEY },
-      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(3500),
+      cache: "no-store",
     });
 
     if (!resp.ok) return destinations.map(() => null);
@@ -126,15 +133,16 @@ export async function getBatchDistanceMatrix(
 
     return elements.map((el) => {
       if (el.status !== "Ok") return null;
-      const meters = el.distance?.value || 0;
-      const seconds = el.duration?.value || 0;
+      const meters = el.distance?.value;
+      const seconds = el.duration?.value;
+      if(!Number.isFinite(meters)||!Number.isFinite(seconds)||meters<0||seconds<0)return null;
       return {
         distance_km: Math.round((meters / 1000) * 10) / 10,
-        duration_minutes: Math.max(1, Math.round(seconds / 60)),
+        duration_minutes: Math.ceil(seconds / 60),
       };
     });
-  } catch (error) {
-    console.error("Neshan distance matrix error:", error);
+  } catch {
+    console.warn("Neshan service unavailable");
     return destinations.map(() => null);
   }
 }
@@ -148,13 +156,14 @@ export async function getStoreLocationContext(
     const url = `https://api.neshan.org/v5/reverse?lat=${lat}&lng=${lon}`;
     const resp = await fetch(url, {
       headers: { "Api-Key": NESHAN_SERVICE_KEY },
-      next: { revalidate: 86400 },
+      signal: AbortSignal.timeout(3500),
+      cache: "no-store",
     });
 
     if (!resp.ok) return null;
 
     const data = await resp.json();
-    if (data.status !== "OK") return null;
+    if (data.status !== "OK"||typeof data.in_traffic_zone!=="boolean"||typeof data.in_odd_even_zone!=="boolean") return null;
 
     return {
       neighbourhood: data.neighbourhood || "تهران",
@@ -163,8 +172,8 @@ export async function getStoreLocationContext(
       in_traffic_zone: Boolean(data.in_traffic_zone),
       in_odd_even_zone: Boolean(data.in_odd_even_zone),
     };
-  } catch (error) {
-    console.error("Neshan reverse geocoding error:", error);
+  } catch {
+    console.warn("Neshan service unavailable");
     return null;
   }
 }

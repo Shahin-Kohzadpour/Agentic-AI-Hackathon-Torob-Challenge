@@ -15,6 +15,9 @@ import re
 import sqlite3
 import sys
 import time
+from decimal import Decimal, InvalidOperation
+import hashlib
+import tempfile
 from pathlib import Path
 
 # Paths
@@ -76,6 +79,19 @@ def check_torob_pay_in_person(payment_options_json: str) -> int:
     return 0
 
 
+def parse_price(raw):
+    """Exact toman integer or unknown. Preserve the original value separately."""
+    if raw is None or str(raw).strip().lower() in ('', 'null'):
+        return None
+    try:
+        value = Decimal(str(raw).strip())
+        if not value.is_finite() or value != value.to_integral_value() or not 0 < value <= 2**53-1:
+            return None
+        return int(value)
+    except (InvalidOperation, ValueError):
+        return None
+
+
 def create_schema(conn: sqlite3.Connection):
     cursor = conn.cursor()
     cursor.executescript("""
@@ -83,11 +99,6 @@ def create_schema(conn: sqlite3.Connection):
     PRAGMA journal_mode = WAL;
     PRAGMA synchronous = NORMAL;
 
-    DROP TABLE IF EXISTS offers;
-    DROP TABLE IF EXISTS products;
-    DROP TABLE IF EXISTS shops;
-    DROP TABLE IF EXISTS products_fts;
-    DROP TABLE IF EXISTS shops_fts;
 
     CREATE TABLE shops (
         shop_id TEXT PRIMARY KEY,
@@ -123,7 +134,8 @@ def create_schema(conn: sqlite3.Connection):
         product_id TEXT NOT NULL,
         shop_id TEXT NOT NULL,
         seller_title TEXT,
-        price_toman REAL,
+        price_toman INTEGER,
+        price_raw TEXT,
         last_price_changed_at TEXT,
         warranty TEXT,
         description TEXT,
@@ -159,6 +171,17 @@ def create_schema(conn: sqlite3.Connection):
         normalized_search,
         tokenize = 'unicode61'
     );
+    """)
+    conn.commit()
+
+
+def create_product_stats(conn):
+    conn.executescript("""
+    CREATE TABLE product_stats (product_id TEXT PRIMARY KEY, min_price INTEGER, seller_count INTEGER NOT NULL);
+    INSERT INTO product_stats
+      SELECT p.product_id, MIN(CASE WHEN o.price_toman>0 AND o.price_toman=CAST(o.price_toman AS INTEGER) THEN o.price_toman END), COUNT(DISTINCT o.shop_id)
+      FROM products p LEFT JOIN offers o ON o.product_id=p.product_id GROUP BY p.product_id;
+    CREATE INDEX idx_product_stats_price ON product_stats(min_price);
     """)
     conn.commit()
 
@@ -284,12 +307,7 @@ def import_data(conn: sqlite3.Connection, csv_dir: Path, is_sample: bool = False
 
             seller_title = row.get("seller_title") or ""
             price_val = row.get("price_toman")
-            price = None
-            if price_val and price_val != "null":
-                try:
-                    price = float(price_val)
-                except ValueError:
-                    price = None
+            price = parse_price(price_val)
 
             last_change = row.get("last_price_changed_at") or None
             if last_change == "null":
@@ -305,17 +323,19 @@ def import_data(conn: sqlite3.Connection, csv_dir: Path, is_sample: bool = False
 
             offer_rows.append((
                 o_id, p_id, s_id, seller_title, price,
-                last_change, warranty, desc, norm_seller_title
+                last_change, warranty, desc, norm_seller_title, price_val
             ))
 
     cursor.executemany("""
         INSERT INTO offers (
             offer_id, product_id, shop_id, seller_title, price_toman,
-            last_price_changed_at, warranty, description, normalized_seller_title
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            last_price_changed_at, warranty, description, normalized_seller_title, price_raw
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, offer_rows)
     conn.commit()
     print(f"-> Imported {len(offer_rows):,} offers in {time.time()-t0:.2f}s (skipped invalid refs: {skipped_offers})")
+
+    create_product_stats(conn)
 
     # Optimize and vacuum
     t0 = time.time()
@@ -329,21 +349,52 @@ def main():
     parser = argparse.ArgumentParser(description="Import Torob dataset into SQLite")
     parser.add_argument("--sample", action="store_true", help="Use small sample dataset for rapid development")
     parser.add_argument("--db", type=str, default=str(DEFAULT_DB_PATH), help="Target SQLite database path")
+    parser.add_argument("--csv-dir", type=Path, help="Directory containing shops.csv/products.csv/offers.csv (sample_ prefix with --sample)")
+    parser.add_argument("--replace", action="store_true", help="Explicitly replace an existing database after making a consistent .backup snapshot")
     args = parser.parse_args()
-
-    target_db = Path(args.db)
+    target_db = Path(args.db).resolve()
     target_db.parent.mkdir(parents=True, exist_ok=True)
-
-    csv_dir = SAMPLE_DIR if args.sample else FULL_CSV_DIR
+    if target_db.exists() and not args.replace:
+        parser.error("Target exists. Choose a new --db path, or explicitly use --replace (creates a backup).")
+    csv_dir = (args.csv_dir or (SAMPLE_DIR if args.sample else FULL_CSV_DIR)).resolve()
+    prefix = "sample_" if args.sample else ""
+    source_files = [csv_dir / f"{prefix}{name}.csv" for name in ('shops', 'products', 'offers')]
+    if not all(p.is_file() for p in source_files):
+        parser.error("CSV directory does not contain the three required input files.")
     print(f"Database target: {target_db}")
     print(f"CSV directory:   {csv_dir}")
-
-    conn = sqlite3.connect(str(target_db))
+    # Build separately: malformed input never destroys a working database.
+    fd, temporary = tempfile.mkstemp(prefix=target_db.name+'.import-', suffix='.db', dir=target_db.parent)
+    os.close(fd)
+    temporary = Path(temporary)
+    conn = sqlite3.connect(str(temporary))
     try:
         create_schema(conn)
         import_data(conn, csv_dir, is_sample=args.sample)
+        if conn.execute('PRAGMA foreign_key_check').fetchone():
+            raise ValueError('Foreign key validation failed')
+        if conn.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+            raise ValueError('SQLite integrity validation failed')
+        counts = {table: conn.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0] for table in ('shops','products','offers')}
+        conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+        conn.execute('PRAGMA journal_mode=DELETE')
+        conn.close()
+        if target_db.exists():
+            backup = target_db.with_name(target_db.name+'.backup-'+str(int(time.time())))
+            with sqlite3.connect(str(target_db)) as original, sqlite3.connect(str(backup)) as destination:
+                original.backup(destination)
+            # Do not replace a database while application processes still have its WAL open.
+            if Path(str(target_db)+'-wal').exists() and Path(str(target_db)+'-wal').stat().st_size:
+                raise RuntimeError('Stop database writers before --replace. A consistent backup was saved.')
+        os.replace(temporary, target_db)
+        sources = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in source_files}
+        report = {'schema_version':3,'imported_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'counts':counts,'sources_sha256':sources,'money':'integer toman; invalid/null preserved in price_raw'}
+        target_db.with_suffix('.manifest.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+        print(json.dumps(report,ensure_ascii=False))
     finally:
         conn.close()
+        if temporary.exists():
+            temporary.unlink()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,13 @@
+{
+  "counts": {
+    "shops": 6476,
+    "products": 225903,
+    "offers": 331506
+  },
+  "foreign_key_errors": 0,
+  "unknown_prices": 15094,
+  "wrong_money_types": 0,
+  "changed_prices": 11,
+  "changed_offer_evidence": 0,
+  "extra_multioffers": 20315
+}
